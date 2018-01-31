@@ -1,0 +1,2 @@
+# IA
+Practicas Inteligencia Artificial
