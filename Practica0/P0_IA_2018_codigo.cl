@@ -12,22 +12,22 @@
 ;;; 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(setf a (+ 2 3))
+(setf a (+ 2 3)) 				; a = 5
 (eval a)
 
-(setf b '(+ 2 3))
-(eval b)
+(setf b '(+ 2 3)) 				; b = (+23)
+(eval b)						; (eval b) = 5
 
-(setf c (quote (+ 2 3)))
-(eval c)
+(setf c (quote (+ 2 3))) 		; c = (+23)
+(eval c)						; (eval c) = 5
 
-(setf d (list 'quote '(+ 2 3)))
-(eval d)
-(eval (eval d))
+(setf d (list 'quote '(+ 2 3))) ; d = '(+23)
+(eval d) 						; (eval d) = (+23)
+(eval (eval d))					; (eval (eval d)) = 5
 
-(setf d (list 'quote (+ 2 3)))
-(eval d)
-(eval (eval d))
+(setf e (list 'quote (+ 2 3)))	; e = '5
+(eval e)						; (eval e) = 5
+(eval (eval e))					; (eval e) = 5
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -40,28 +40,29 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(atom 12)
-(atom 'abc)
-(atom a)
-(atom '(a b))
-(atom '())
+(atom 12) ; True
+(atom 'abc) ; True
+(atom a)	; True
+(atom '(a b)) ;False
+(atom '()) ;True
 
-(null '())
-(null nil)
+(null '()) ; True
+(null nil) ; True
 
-(symbolp 12)
-(symbolp 'abc)
-(symbolp a)
-(symbolp nil)
+(symbolp 12) ; False
+(symbolp 'abc) ; True
+(symbolp a) ; False
+(symbolp nil) ; True
 
-(numberp 123)
-(numberp 'a)
+(numberp 123) ;True
+(numberp 'a) ;False
 (setf a 3)
-(numberp a)
+(numberp a) ; True
 
-(listp '(a b))
-(listp '())
-(listp nil)
+(listp '(a b)) ; True
+(listp '()) ; True	
+(listp nil) ; True
+(listp '(+ 2 3)) ; True
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -77,20 +78,20 @@
 ;;;	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(setf milista nil)
-(setf milista '(- 6 2))
-(setf milista (- 6 2))
-(setf milista '(8 (9 10) 11))
-(car milista)
-(first milista)
-(cdr milista)
-(rest milista)
-(car (cdr milista))
-(length milista)
-(setf milista (cons 4 '(3 2)))
-(setf milista (list '+ 4 3 2))
-(eval milista)
-(setf milista (append '(4 3) '(2 1)))
+(setf milista nil) ; NIL
+(setf milista '(- 6 2)) ; (- 6 2)
+(setf milista (- 6 2)) ; 4
+(setf milista '(8 (9 10) 11)) ; (8 (9 10) 11)
+(car milista) ; 8
+(first milista) ;8
+(cdr milista) ; ((9 10 ) 11)
+(rest milista) ; ((9 10 ) 11)
+(car (cdr milista)) ;(9 10)
+(length milista) ; 3 [8 (9 10) 11]
+(setf milista (cons 4 '(3 2))) ; (4 3 2)
+(setf milista (list '+ 4 3 2)) ; (+ 4 3 2)
+(eval milista)				   ; 9
+(setf milista (append '(4 3) '(2 1))) ; (4 3 2 1)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -107,16 +108,16 @@
 ;;;	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(if t 1 2)
-(if nil 1 2)
-(when t 1 2 3)
-(when nil 1 2 3)
-(unless t 1 2 3)
-(unless nil 1 2 3)
-(setf nota 7)
+(if t 1 2) ; 1
+(if nil 1 2) ; 2
+(when t 1 2 3) ; 3
+(when nil 1 2 3) ; NIL
+(unless t 1 2 3) ; NIL
+(unless nil 1 2 3) ; 3
+(setf nota 7) ; nota = 7
 (cond ((<= nota 5) 'suspenso)
       ((<= nota 7) 'aprobado)
-      ((<= nota 9) 'notable)
+      ((<= nota 9) 'notable) ; Aprobado
        (t 'sobresaliente))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -138,15 +139,15 @@
 (defun elimina-primero (lista)
   (rest lista))
 (setf lista '(1 2 3 4 5 6 7)) 
-(elimina-primero lista)
-lista
+(elimina-primero lista) ; (2 3 4 5 6 7)
+lista ; (1 2 3 4 5 6 7)
 
 (defun elimina-segundo (lista)
   (cons (first lista)
-        (rest (rest lista))))
+        (rest (rest lista)))) ; Cogemos la lista (1) y (3 4 5 6 7) y las unimos con cons.
 (setf lista '(1 2 3 4 5 6 7)) 
-(elimina-segundo lista)
-lista
+(elimina-segundo lista) ; (1 3 4 5 6 7)
+lista ; (1 2 3 4 5 6 7)
 
 (defun elimina-enesimo (lista n)
   (if (<= n 1)
@@ -155,6 +156,12 @@ lista
             (elimina-enesimo (rest lista) (- n 1)))))
 (setf lista '(1 2 3 4 5 6 7)) 
 (elimina-enesimo lista 4)
+lista
+
+(defun our-length (lista)
+	(if (eq nil lista) (0) (+ 1 (our-length (rest lista)))))
+(setf lista '(1 2 3 4 5 6 7))
+(our-length lista)
 lista
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -175,14 +182,16 @@ lista
 ;;;	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(mapcar #'(lambda (x) (* x x)) '(1 2 3))
-(setf sqr (lambda (x) (* x x)))
-(mapcar sqr '(1 2 3))
-(maplist #'append '(1 2 3 4) '(1 2) '(1 2 3))
+(mapcar #'(lambda (x) (* x x)) '(1 2 3)) ; Aplica a la lista la operacion definida
+(setf sqr (lambda (x) (* x x))) ; sqr(x) = x * x
+(mapcar sqr '(1 2 3)) 
+(maplist #'append '(1 2 3 4) '(1 2) '(1 2 3)) ; Tantas listas como el menor tamaño de lista de las de argumentos de entrada
 (funcall sqr 3)
 (apply sqr '(3))
-(apply #'+ '(1 2 3 4))
+(apply #'+ '(1 2 3 4)) ; 1 + 2 + 3 + 4 
 
+(defun sum-range (n)
+	(if (eq n 0) (0) (+ n (sum-range(- 1 n)))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; EJEMPLO 7
