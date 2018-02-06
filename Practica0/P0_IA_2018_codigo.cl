@@ -191,7 +191,7 @@ lista
 (apply #'+ '(1 2 3 4)) ; 1 + 2 + 3 + 4 
 
 (defun sum-range (n)
-	(if (eq n 0) (0) (+ n (sum-range(- 1 n)))))
+	(if (eq n 0) (0) (+ n (sum-range(- n 1))))) ;;FUNCIONA!! cambiar orden 1 n a n 1
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; EJEMPLO 7
@@ -220,38 +220,42 @@ lista
 
 (setf a 3)
 (setf b 3)
-(eq a a)
-(eq a 3)
-(eq a b)
-(eq a 3.0)
-(eql a 3)
-(eql a b)
-(eql a 3.0)
-(equal a 3)
-(equal a b)
-(equal a 3.0)
-(= a 3)
-(= a b)
-(= a 3.0)
+(eq a a) ;T
+(eq a 3) ;T
+(eq a b) ;T
+(eq a 3.0) ;Nil
+(eql a 3) ;T
+(eql a b) ;T
+(eql a 3.0) ;Nil
+(equal a 3) ;T
+(equal a b) ;T
+(equal a 3.0) ;NIL
+(= a 3) ;T
+(= a b) ;T
+(= a 3.0) ;T!!!
 
 (setf lst '(1 2 3))
 (setf lst2 '(1 2 3))
-(eq lst lst)
-(eq lst '(1 2 3))
-(eq lst lst2)
-(eql lst '(1 2 3))
-(eql lst lst2)
-(equal lst '(1 2 3))
-(equal lst lst2)
+(eq lst lst) ;T
+(eq lst '(1 2 3)) ;Nil
+(eq lst lst2) ;Nil
+(eql lst '(1 2 3)) ; Nil
+(eql lst lst2) ; Nil
+(equal lst '(1 2 3)) ;T
+(equal lst lst2) ;T
 
-(member 2 lst)
-(member-if #'oddp lst)
-(position 1 lst)
-(position-if #'zerop lst)
-(remove 3 lst)
-(remove-if #'evenp lst)
-(every #'numberp lst)
-(some #'minusp lst)
+(member 2 lst) ;(2 3)
+(member-if #'oddp lst) ;(1 2 3)
+(position 1 lst) ; 0
+(position-if #'zerop lst) ;Nil 
+(remove 3 lst) ;(1 2)
+(remove-if #'evenp lst) ; (1 3)
+(every #'numberp lst) ; T
+(some #'minusp lst) ; Nil
+
+(defun my-member (elemento lista comparador) (if ((comparador elemento (first lista)) and (not (eq lista nil))) (lista) (my-member (elemento) (rest lista) (comparador))))
+
+(defun my-count (elemento lista comparador) (if ((eq (my-member (elemento) (lista) (comparador)) (lista)) and (not (eq lista nil))) (+ 1 (my-member (elemento) (rest lista) (comparador))) (my-member (elemento) (rest lista) (comparador))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -293,6 +297,9 @@ lista
 
 (obten-pares lista)
 
+;; Facil implementar pero no modifica la lista inicial ni se puede acceder a ella
+;; Usa un comparador potente interno como oddp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; obten-pares: Implementación recursiva
@@ -307,6 +314,10 @@ lista
 
 (obten-pares-recursiva lista)
 
+;;Difícil de implementar
+;; Consiste en ir comprobando elemento a elemento de la lista si son o no pares
+;; si lo son se van almacenando
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; obten-pares: Implementación con mapcar
@@ -319,6 +330,11 @@ lista
             lista)))
 
 (obten-pares-mapcar lista)
+
+;; Nivel intermedio
+;; Crea una función que añade elementos a la lista si son pares
+
+;; (time (obten-pares (make-list 1000 :initial_element 2)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -352,10 +368,10 @@ lista
 (setf *lista-amigos* '(jaime maria julio))
 
 (setf *lista-amigos-masculinos* (remove 'maria *lista-amigos*))
-*lista-amigos*
+*lista-amigos* ;;(JAIME MARIA JULIO)
 
 (setf *lista-amigos-masculinos* (delete 'maria *lista-amigos*))
-*lista-amigos*
+*lista-amigos* ;; (JAIME JULIO)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -366,19 +382,19 @@ lista
 (setf *dias-libres* '(domingo))
 
 (cons 'sabado *dias-libres*)
-*dias-libres*
+*dias-libres* ; (DOMINGO)
 
 (push 'sabado *dias-libres*)
-*dias-libres*
+*dias-libres* ; (SABADO DOMINGO)
 
 (setf *dias-libres* (cons 'viernes *dias-libres*))
-*dias-libres*
+*dias-libres* ; (VIERNES SABADO DOMINGO)
 
-(first *dias-libres*)
-*dias-libres*
+(first *dias-libres*) ;(VIERNES)
+*dias-libres* ; (VIERNES SABADO DOMINGO)
 
 (pop *dias-libres*)
-*dias-libres*
+*dias-libres* ; (SABADO DOMINGO)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -389,8 +405,9 @@ lista
 (setf lst '((a -4) (b -3)  (c 1)  (d 9)))
 (sort (copy-list lst)   ; copia solo el esqueleto de la lista
       #'(lambda(x y) (< (abs x) (abs y))) ; compara valor abs 
-      :key #'second)                        ; del cadr  
-lst
+      :key #'second)                        ; del cadr
+      ;;   ((C 1) (B -3) (A -4) (D 9))
+lst ;; ((A -4) (B -3) (C 1) (D 9))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -401,6 +418,9 @@ lst
 (setf lst '((a -4) (b -3)  (c 1)  (d 9)))
 (sort lst
       #'(lambda(x y) (< (abs x) (abs y))) ; compara valor abs 
-      :key #'second)                        ; del cadr  
-lst
+      :key #'second)                        ; del cadr
+      ;;   ((C 1) (B -3) (A -4) (D 9))
+lst ;; ((B -3) (A -4) (D 9))
 
+;; TE LA DEJO PARA TI GUAPO (11:10)
+(defun sorted-occurrences (lista) (sort (copy-list lista) (if ((eq (find ((first lista) ocurrencias)) nil) and (eq lista nil)) ((cons '((first prr) (count ((first prr) lista))) ocurrencias) and ()) ()
