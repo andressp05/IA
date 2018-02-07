@@ -18,7 +18,7 @@
 (defun our-neg (lista) ;;Calcula si todos los numero de una lista son positivos
   (some #'minusp lista)) ;;Devuelve True si hay alguno negativo, NIL en caso contrario
 
-(defun our-pesc (x y) ;;Calcula el producto escalar de dos vectores repreentados como listas
+(defun our-pesc (x y) ;;Calcula el producto escalar de dos vectores representados como listas
   (if (or (equal nil x) (equal nil y))
       0
     (+ (* (first x) (first y)) (our-pesc (rest x) (rest y))))) 
@@ -46,7 +46,15 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun sc-mapcar (x y) ...)
+(defun p-escalar (lista1 lista2)
+  (reduce '+ (mapcar #'* lista1 lista2)))
+
+(defun norma (lista)
+  (if (equal lista nill)
+      0
+    (reduce '+ (mapcar #'(lambda (x) (* x x)) lista))))
+
+(defun sc-mapcar (x y) ) ;; LO hago mañanaaa!!!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 1.2
