@@ -159,7 +159,9 @@ lista ; (1 2 3 4 5 6 7)
 lista
 
 (defun our-length (lista)
-	(if (eq nil lista) (0) (+ 1 (our-length (rest lista)))))
+	(if (equal nil lista) 
+      (0) 
+	  (+ 1 (our-length (rest lista)))))
 (setf lista '(1 2 3 4 5 6 7))
 (our-length lista)
 lista
@@ -191,7 +193,7 @@ lista
 (apply #'+ '(1 2 3 4)) ; 1 + 2 + 3 + 4 
 
 (defun sum-range (n)
-	(if (eq n 0) (0) (+ n (sum-range(- n 1))))) ;;FUNCIONA!! cambiar orden 1 n a n 1
+	(if (eq n 0)  (0)  (+ n (sum-range(- n 1))))) ;;FUNCIONA!! cambiar orden 1 n a n 1
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; EJEMPLO 7
@@ -244,16 +246,17 @@ lista
 (equal lst '(1 2 3)) ;T
 (equal lst lst2) ;T
 
-(member 2 lst) ;(2 3)
-(member-if #'oddp lst) ;(1 2 3)
-(position 1 lst) ; 0
-(position-if #'zerop lst) ;Nil 
-(remove 3 lst) ;(1 2)
-(remove-if #'evenp lst) ; (1 3)
-(every #'numberp lst) ; T
-(some #'minusp lst) ; Nil
+(member 2 lst) ;(2 3) Devuelve la sublista cuyo primer el elemento es el buscado
+(member-if #'oddp lst) ;(1 2 3) En vez de comprobar igualdad, comprueba la condición que se le pasa
+(position 1 lst) ; 0 Determina la primera posicionen la que se encuentra el elemento a buscar
+(position-if #'zerop lst) ;Nil (Posicion del primer 0)
+(remove 3 lst) ;(1 2) Elimina el elemeto 3. No modifica lst!!!!!!!
+(remove-if #'evenp lst) ; (1 3) 
+(every #'numberp lst) ; T Comprueba si todos los elementos de la lista cumplen una condicion determinada.
+(some #'minusp lst) ; Nil Comprueba si algun elemento cumple la condicion
 
-(defun my-member (elemento lista comparador) (if ((comparador elemento (first lista)) and (not (eq lista nil))) (lista) (my-member (elemento) (rest lista) (comparador))))
+(defun my-member (elemento lista comparador) 
+	(if ((comparador elemento (first lista)) and (unless lista nill) (lista) (my-member (elemento) (rest lista) (comparador))))
 
 (defun my-count (elemento lista comparador) (if ((eq (my-member (elemento) (lista) (comparador)) (lista)) and (not (eq lista nil))) (+ 1 (my-member (elemento) (rest lista) (comparador))) (my-member (elemento) (rest lista) (comparador))))
 
@@ -273,7 +276,7 @@ lista
 ;;;	implementaciones. Para ello, construye una 
 ;;;	lista grande con ayuda de la función 'make-list'
 ;;;	(por ejemplo de tamaño 1000) y mide tiempos de
-;;;	ejecución aciendo uso de la función 'time'.
+;;;	ejecución haciendo uso de la función 'time'.
 ;;;	Analiza los resultados obtenidos.
 ;;;	
 ;;;	A la vista de estos resultados, ¿crees que 
@@ -334,7 +337,7 @@ lista
 ;; Nivel intermedio
 ;; Crea una función que añade elementos a la lista si son pares
 
-;; (time (obten-pares (make-list 1000 :initial_element 2)))
+;; (time (obten-pares (make-list 1000 :initial-element 2)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
