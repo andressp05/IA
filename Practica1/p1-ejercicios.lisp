@@ -26,12 +26,12 @@
 (defun our-norm-square (x) ;;Calcula la norma al cuadrado de un vector
   (if (equal nil x)
       0
-    (+ (* (first x) (first x)) (our-norm (rest x)))))
+    (+ (* (first x) (first x)) (our-norm-square (rest x)))))
   
-(defun sc-rec (x y) ;;Computa el resultado final, comprobando las condiciones del enunciado.
-  (if (or (and((our-neg x) T)) (and((our-neg y) T)) (/= (our-length x) (our-length y)))
+(defun sec-rec (lista1 lista2)
+  (if (or (and(our-neg lista1) T) (and(our-neg lista1)) (/= (our-length lista1) (our-length lista2)))
       0
-    (/ (our-pesc (x y)) (*(sqrt (our-norm-square x)) (sqrt(our-norm-square x))))))
+    (/ (our-pesc lista1 lista2) (*(sqrt (our-norm-square lista1)) (sqrt (our-norm-square lista2))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
