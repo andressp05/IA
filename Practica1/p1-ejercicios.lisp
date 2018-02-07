@@ -10,8 +10,29 @@
 ;;; OUTPUT: similitud coseno entre x e y
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun our-length (lista) ;;Calcula la longitud de una lista
+  (if (equal nil lista)
+      0
+      (+ 1 (our-length (rest lista)))))
 
-(defun sc-rec (x y) ...)
+(defun our-neg (lista) ;;Calcula si todos los numero de una lista son positivos
+  (some #'minusp lista)) ;;Devuelve True si hay alguno negativo, NIL en caso contrario
+
+(defun our-pesc (x y) ;;Calcula el producto escalar de dos vectores repreentados como listas
+  (if (or (equal nil x) (equal nil y))
+      0
+    (+ (* (first x) (first y)) (our-pesc (rest x) (rest y))))) 
+  
+(defun our-norm-square (x) ;;Calcula la norma al cuadrado de un vector
+  (if (equal nil x)
+      0
+    (+ (* (first x) (first x)) (our-norm (rest x)))))
+  
+(defun sc-rec (x y) ;;Computa el resultado final, comprobando las condiciones del enunciado.
+  (if (or (and((our-neg x) T)) (and((our-neg y) T)) (/= (our-length x) (our-length y)))
+      0
+    (/ (our-pesc (x y)) (*(sqrt (our-norm-square x)) (sqrt(our-norm-square x))))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 1.1.2
