@@ -96,7 +96,15 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun sc-classifier (cats texts func) ...)
+
+(defun our-similarity-cos (cats lista func)
+	(mapcar #'(lambda (y) (func (rest lista) (rest y))) cats))
+
+(defun our-max-similarity (cats lista func)
+	(first (sort (our-similarity-cos cats lista func) #'(lambda (z y) (> z y)))))
+
+(defun sc-classifier (cats texts func)
+	)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 2.1
