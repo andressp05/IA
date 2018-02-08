@@ -50,11 +50,14 @@
   (reduce '+ (mapcar #'* lista1 lista2)))
 
 (defun norma (lista)
-  (if (equal lista nill)
+  (if (equal lista nil)
       0
     (reduce '+ (mapcar #'(lambda (x) (* x x)) lista))))
 
-(defun sc-mapcar (x y) ) ;; LO hago mañanaaa!!!
+(defun sc-mapcar (lista1 lista2)
+  (if (or (and(our-neg lista1) T) (and(our-neg lista1)) (/= (our-length lista1) (our-length lista2)))
+      0
+    (/ (p-escalar lista1 lista2) (* (sqrt (norma lista1)) (sqrt (norma lista1))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 1.2
