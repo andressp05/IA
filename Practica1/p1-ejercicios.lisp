@@ -54,10 +54,10 @@
       0
     (reduce '+ (mapcar #'(lambda (x) (* x x)) lista))))
 
-(defun sc-mapcar (lista1 lista2)
+(defun sc-mapcar (lista1 lista2) ;; Utilizamos las funciones recursivas del primer apartado.
   (if (or (and(our-neg lista1) T) (and(our-neg lista1)) (/= (our-length lista1) (our-length lista2)))
       0
-    (/ (p-escalar lista1 lista2) (* (sqrt (norma lista1)) (sqrt (norma lista1))))))
+    (/ (p-escalar lista1 lista2) (* (sqrt (norma lista1)) (sqrt (norma lista2))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 1.2
