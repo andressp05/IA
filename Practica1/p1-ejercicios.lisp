@@ -71,8 +71,17 @@
 ;;; OUTPUT: Vectores cuya similitud es superior al nivel de confianza, ordenados
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;(defun our-similarity-cos (x vs)
+;;;;;;(mapcar #'(lambda (y) (sc-mapcar x y)) vs))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun our-conf (x vs conf)
+  (remove-if #'(lambda (y) (< (sc-mapcar x y) conf)) vs))
 
-(defun sc-conf (x vs conf) ...)
+(defun sc-conf (x vs conf)
+  (sort (our-conf x vs conf) #'(lambda (z y) (> (sc-mapcar x z) (sc-mapcar x y)))))
+
+  
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 1.3
