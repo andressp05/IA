@@ -1,4 +1,4 @@
- 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 1.1.1
 ;;; sc-rec (x y)
@@ -11,7 +11,7 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun is-ok (x y) ;; FUncion que recorre la lista comprobando si los elementos son todos positivos y si ambas listas son de igual tamaño
+(defun is-ok (x y) ;; Funcion que recorre la lista comprobando si los elementos son todos positivos y si ambas listas son de igual tamaño
   (cond ((and (null x) (null y)) T)
         ( (and (null x)
                (not (null y)))
@@ -26,19 +26,19 @@
 (is-ok '(1 2 3) '(3 4 5))
   
 
-(defun our-pesc (x y) ;;Calcula el producto escalar de dos vectores representados como listas
+(defun our-pesc-rec (x y) ;;Calcula el producto escalar de dos vectores representados como listas
   (if (or (equal nil x) (equal nil y))
       0
-    (+ (* (first x) (first y)) (our-pesc (rest x) (rest y))))) 
+    (+ (* (first x) (first y)) (our-pesc-rec (rest x) (rest y))))) 
 
-(our-pesc '(1 2 3) '( 2 5 6))
+(our-pesc-rec '(1 2 3) '( 2 5 6))
   
-(defun sec-rec (lista1 lista2)
+(defun sc-rec (lista1 lista2)
   (if (equal NIL (is-ok lista1 lista2))
       NIL
-    (/ (our-pesc lista1 lista2) (*(sqrt (our-pesc lista1 lista1)) (sqrt (our-pesc lista2 lista2))))))
+    (/ (our-pesc-rec lista1 lista2) (*(sqrt (our-pesc-rec lista1 lista1)) (sqrt (our-pesc-rec lista2 lista2))))))
 
-(sec-rec '(1 0) '(0 1))
+(sc-rec '(1 0) '(0 1))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -53,15 +53,17 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun p-escalar (lista1 lista2)
+(defun our-pesc-map (lista1 lista2)
   (reduce '+ (mapcar #'* lista1 lista2)))
 
 (defun sc-mapcar (lista1 lista2) ;; Utilizamos las funciones recursivas del primer apartado.
   (if (equal NIL (is-ok lista1 lista2))
       NIL
-     (/ (p-escalar lista1 lista2) (*(sqrt (p-escalar lista1 lista1)) (sqrt (p-escalar lista2 lista2))))))
+     (/ (our-pesc-map lista1 lista2) (*(sqrt (our-pesc-map lista1 lista1)) (sqrt (our-pesc-map lista2 lista2))))))
 
 (sc-mapcar '(1 2 3) '(2 3 4))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 1.2
 ;;;	sc-conf (x vs conf)
@@ -78,6 +80,7 @@
 ;;;;;;(defun our-similarity-cos (x vs)
 ;;;;;;(mapcar #'(lambda (y) (sc-mapcar x y)) vs))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun our-conf (x vs conf)
   (remove-if #'(lambda (y) (< (sc-mapcar x y) conf)) vs))
 
@@ -105,20 +108,19 @@
 (defun our-similarity-cos (cats lista func)
   (mapcar #'(lambda (y) (append(list(first y) (funcall func (rest lista) (rest y))))) cats))
   
-(second(first(list(list(first '(1 2 3)) 0.95))))  
-(our-similarity-cos '((1 2 3) ( 2 3 4) (6 6 8)) '(3 3 3) #'sec-rec)
+(our-similarity-cos '((1 2 3) ( 2 3 4) (6 6 8)) '(3 3 3) #'sc-rec)
 
 (defun our-max-similarity (cats lista func)
   (first (sort(our-similarity-cos cats lista func) #'(lambda (z y) (> (second z) (second y))))))
 
-(our-max-similarity '((1 2 3) ( 2 3 5) (6 6 8)) '( 3 6 8) #'sec-rec)
+(our-max-similarity '((1 2 3) ( 2 3 5) (6 6 8)) '( 3 6 8) #'sc-rec)
 
 (defun sc-classifier (cats texts func)
   (mapcar #'(lambda (z) (our-max-similarity cats z func)) texts))
 
 
-(sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 6 8)) #'sec-rec)
-(sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 3 6) (3 2 3)) #'sec-rec)
+(sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 6 8)) #'sc-rec)
+(sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 3 6) (3 2 3)) #'sc-rec)
 (sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 6 8)) #'sc-mapcar)
 (sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 3 6) (3 2 3)) #'sc-mapcar)
 (sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 3 6) (3 2)) #'sc-mapcar)
@@ -147,7 +149,7 @@
 (defun our-medium-point (a b)
   (/ (+ a b) 2))
 
-(defun decision (f a b)
+(defun our-decision (f a b)
   (if (> (* (funcall f a) (funcall f (our-medium-point a b))) 0)
 
  (defun bisect (f a b tol)
