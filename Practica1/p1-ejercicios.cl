@@ -87,7 +87,6 @@
   (sort (our-conf x vs conf) #'(lambda (z y) (> (sc-mapcar x z) (sc-mapcar x y)))))
 
 (sc-conf '(1 2 3) '((1 2 3) (3 4 5) (1 0 0) (1 1 1)) 0.9)
-(
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 1.3
@@ -112,29 +111,58 @@
 (defun our-max-similarity (cats lista func)
   (first (sort(our-similarity-cos cats lista func) #'(lambda (z y) (> (second z) (second y))))))
 
-(our-max-similarity '((1 2 3) ( 2 3 4) (6 6 8)) '( 3 3 3) #'sec-rec)
+(our-max-similarity '((1 2 3) ( 2 3 5) (6 6 8)) '( 3 6 8) #'sec-rec)
 
-(defun sc-classifier (cats texts func))
+(defun sc-classifier (cats texts func)
+  (mapcar #'(lambda (z) (our-max-similarity cats z func)) texts))
+
+
+(sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 6 8)) #'sec-rec)
+(sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 3 6) (3 2 3)) #'sec-rec)
+(sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 6 8)) #'sc-mapcar)
+(sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 3 6) (3 2 3)) #'sc-mapcar)
+(sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 3 6) (3 2)) #'sc-mapcar)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 2.1
 ;;; bisect (f a b tol)
-;;; Encuentra una raíz de f entre los puntos a y b usando bisección
+;;; Encuentra una raiz de f entre los puntos a y b usando biseccion
 ;;;
-;;; Si f(a)f(b)>0 no hay garantía de que vaya a haber una raíz en el
-;;; intervals, y la función devolverá NIL.
+;;; Si f(a)f(b)>0 no hay garanti�a de que vaya a haber una rai�z en el
+;;; intervalo, y la funcion devolvera NIL.
 ;;;
-;;; INPUT: f: función de un solo parámetro real con valores reales cuya
-;;; raíz queremos encontrar
-;;; a: extremo inferior del intervalo en el que queremos buscar la raíz
-;;; b: b>a extremo superior del intervalo en el que queremos buscar la raíz
-;;; tol: tolerancia para el criterio de parada: si b-a < tol de la función
+;;; INPUT: f: funcion de un solo parametro real con valores reales cuya
+;;; raiz queremos encontrar
+;;; a: extremo inferior del intervalo en el que queremos buscar la raiz
+;;; b: b>a extremo superior del intervalo en el que queremos buscar la rai�z
+;;; tol: tolerancia para el criterio de parada: si b-a < tol de la funcion
 ;;;
-;;; OUTPUT: devuelve (a+b)/2 como solución
+;;; OUTPUT: devuelve (a+b)/2 como solucion
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun bisect (f a b tol) ...)
+(defun our-distance (a b)
+  (abs (- b a)))
+
+(defun our-medium-point (a b)
+  (/ (+ a b) 2))
+
+(defun decision (f a b)
+  (if (> (* (funcall f a) (funcall f (our-medium-point a b))) 0)
+
+ (defun bisect (f a b tol)
+  (let (c (our-medium-point a b))
+  (cond ((< (our-distance a b) tol) (our-medium-point a b))
+        ((equal a 0) a)
+        ((equal b 0) b)
+        ((> (* (funcall f a) (funcall f b)) 0) nil)
+        ((and (> a 0) (> c 0)) (bisect (f, c, b))
+        
+        
+  
+        
+      
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 2.2
