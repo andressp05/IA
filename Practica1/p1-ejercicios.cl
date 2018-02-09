@@ -10,28 +10,35 @@
 ;;; OUTPUT: similitud coseno entre x e y
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun our-length (lista) ;;Calcula la longitud de una lista
-  (if (equal nil lista)
-      0
-      (+ 1 (our-length (rest lista)))))
 
-(defun our-neg (lista) ;;Calcula si todos los numero de una lista son positivos
-  (some #'minusp lista)) ;;Devuelve True si hay alguno negativo, NIL en caso contrario
+(defun is-ok (x y) ;; FUncion que recorre la lista comprobando si los elementos son todos positivos y si ambas listas son de igual tamaño
+  (cond ((and (null x) (null y)) T)
+        ( (and (null x)
+               (not (null y)))
+         NIL)
+        ( (and (null y)
+               (not (null x)))
+         NIL)
+       ((< (first x) 0) NIL) 
+       ((< (first y) 0) NIL) 
+       (T (is-ok (rest x) (rest y)))))
+
+(is-ok '(1 2 3) '(3 4 5))
+  
 
 (defun our-pesc (x y) ;;Calcula el producto escalar de dos vectores representados como listas
   (if (or (equal nil x) (equal nil y))
       0
     (+ (* (first x) (first y)) (our-pesc (rest x) (rest y))))) 
-  
-(defun our-norm-square (x) ;;Calcula la norma al cuadrado de un vector
-  (if (equal nil x)
-      0
-    (+ (* (first x) (first x)) (our-norm-square (rest x)))))
+
+(our-pesc '(1 2 3) '( 2 5 6))
   
 (defun sec-rec (lista1 lista2)
-  (if (or (and(our-neg lista1) T) (and(our-neg lista1)) (/= (our-length lista1) (our-length lista2)))
-      0
-    (/ (our-pesc lista1 lista2) (*(sqrt (our-norm-square lista1)) (sqrt (our-norm-square lista2))))))
+  (if (equal NIL (is-ok lista1 lista2))
+      NIL
+    (/ (our-pesc lista1 lista2) (*(sqrt (our-pesc lista1 lista1)) (sqrt (our-pesc lista2 lista2))))))
+
+(sec-rec '(1 0) '(0 1))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -49,16 +56,12 @@
 (defun p-escalar (lista1 lista2)
   (reduce '+ (mapcar #'* lista1 lista2)))
 
-(defun norma (lista)
-  (if (equal lista nil)
-      0
-    (reduce '+ (mapcar #'(lambda (x) (* x x)) lista))))
-
 (defun sc-mapcar (lista1 lista2) ;; Utilizamos las funciones recursivas del primer apartado.
-  (if (or (and(our-neg lista1) T) (and(our-neg lista1)) (/= (our-length lista1) (our-length lista2)))
-      0
-    (/ (p-escalar lista1 lista2) (* (sqrt (norma lista1)) (sqrt (norma lista2))))))
+  (if (equal NIL (is-ok lista1 lista2))
+      NIL
+     (/ (p-escalar lista1 lista2) (*(sqrt (p-escalar lista1 lista1)) (sqrt (p-escalar lista2 lista2))))))
 
+(sc-mapcar '(1 2 3) '(2 3 4))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 1.2
 ;;;	sc-conf (x vs conf)
@@ -78,10 +81,13 @@
 (defun our-conf (x vs conf)
   (remove-if #'(lambda (y) (< (sc-mapcar x y) conf)) vs))
 
+(our-conf '(1 2 3) '((1 2 3) (2 3 4) (1 0 0)) 0.5)
+
 (defun sc-conf (x vs conf)
   (sort (our-conf x vs conf) #'(lambda (z y) (> (sc-mapcar x z) (sc-mapcar x y)))))
 
-  
+(sc-conf '(1 2 3) '((1 2 3) (3 4 5) (1 0 0) (1 1 1)) 0.9)
+(
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 1.3
@@ -98,13 +104,17 @@
 
 
 (defun our-similarity-cos (cats lista func)
-	(mapcar #'(lambda (y) (func (rest lista) (rest y))) cats))
+  (mapcar #'(lambda (y) (append(list(first y) (funcall func (rest lista) (rest y))))) cats))
+  
+(second(first(list(list(first '(1 2 3)) 0.95))))  
+(our-similarity-cos '((1 2 3) ( 2 3 4) (6 6 8)) '(3 3 3) #'sec-rec)
 
 (defun our-max-similarity (cats lista func)
-	(first (sort (our-similarity-cos cats lista func) #'(lambda (z y) (> z y)))))
+  (first (sort(our-similarity-cos cats lista func) #'(lambda (z y) (> (second z) (second y))))))
 
-(defun sc-classifier (cats texts func)
-	)
+(our-max-similarity '((1 2 3) ( 2 3 4) (6 6 8)) '( 3 3 3) #'sec-rec)
+
+(defun sc-classifier (cats texts func))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 2.1
@@ -217,3 +227,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun combine-list-of-lsts (lstolsts) ...)
+
+
+
+(defun f (x y) (+ y x))
+
+(defun mycall (f)
+  (funcall f 2 3))
+
+(mycall #'f)
