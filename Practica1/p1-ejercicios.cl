@@ -124,6 +124,7 @@
 (sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 6 8)) #'sc-mapcar)
 (sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 3 6) (3 2 3)) #'sc-mapcar)
 (sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 3 6) (3 2)) #'sc-mapcar)
+(sc-classifier '((1 43 23 12) (2 33 54 24)) '((1 3 22 134) (2 43 26 58)) #'sc-rec)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 2.1
@@ -159,27 +160,42 @@
         ((< (* (funcall f a) (funcall f c)) 0) (bisect f a c tol))
         ((< (* (funcall f b) (funcall f c)) 0) (bisect f c b tol)))))
          
-(bisect #'(lambda (z) (* z z z)) -4 5 0.5)          
+(bisect #'(lambda (z) (* z z z)) -4 5 0.5)
+(bisect #'(lambda(x) (sin (* 6.26 x))) 0.0 0.7 0.001)
+(bisect #'(lambda(x) (sin (* 6.28 x))) 1.1 1.5 0.001)
+(bisect #'(lambda(x) (sin (* 6.28 x))) 1.1 2.1 0.001)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 2.2
 ;;; allroot (f lst tol)
-;;; Encuentra todas las raíces localizadas entre dos valores consecutivos
+;;; Encuentra todas las raices localizadas entre dos valores consecutivos
 ;;; de una lista de valores
 ;;;
-;;; INPUT: f: función de un solo parámetro real con valores reales cuya
-;;; raíz queremos encontrar
+;;; INPUT: f: funcion de un solo parametro real con valores reales cuya
+;;; rai�z queremos encontrar
 ;;; lst: lista ordenada de valores reales (lst[i] < lst[i+1])
-;;; tol: tolerancia para el critreio de parada: si b-a < tol de la función
+;;; tol: tolerancia para el criterio de parada: si b-a < tol de la funcion
 ;;;
-;;; OUTPUT: una lista o valores reales que contienen las raíces de la función
+;;; OUTPUT: una lista o valores reales que contienen las raices de la funcion
 ;;; en los subintervalos dados.
 ;;;
-;;; Cuando sgn(f(lst[i])) != sgn(f(lst[i+1])) esta función busca
-;;; una raíz en el correspondiente intervalo 
+;;; Cuando sgn(f(lst[i])) != sgn(f(lst[i+1])) esta funcion busca
+;;; una raiz en el correspondiente intervalo 
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun allroot (f lst tol) ...)
+(defun allroot (f lst tol)
+	(if (equal (rest lst) nil) 
+		0 ;;Aqu� ir� un break o algo parecido
+		((bisect f (first lst) (first (rest lst)) tol);; te calcula la bisecci�n 
+		(allroot f (rest lst) tol)))
+	;; si no entra en el 0, entra en bisect la calcula y llama a allroot con el resto de la lista
+
+(bisect f (first lst) (first (rest lst)) tol);; esto por separado funciona
+
+(if (or (equal nil x) (equal nil y)) ;;modelo copiado de arriba para hacer lo del if
+      0
+    (+ (* (first x) (first y)) (our-pesc-rec (rest x) (rest y))))) 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 2.3
