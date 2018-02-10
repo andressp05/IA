@@ -185,18 +185,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun allroot (f lst tol)
-	(if (equal (rest lst) nil) 
-		0 ;;Aquí irá un break o algo parecido
-		((bisect f (first lst) (first (rest lst)) tol);; te calcula la bisección 
-		(allroot f (rest lst) tol)))
-	;; si no entra en el 0, entra en bisect la calcula y llama a allroot con el resto de la lista
+  (if (or (equal lst nil) (equal (rest lst) nil))
+      nil
+    (append (list (bisect f (first lst) (second lst) tol)) (allroot f (rest lst) tol))))
 
-(bisect f (first lst) (first (rest lst)) tol);; esto por separado funciona
-
-(if (or (equal nil x) (equal nil y)) ;;modelo copiado de arriba para hacer lo del if
-      0
-    (+ (* (first x) (first y)) (our-pesc-rec (rest x) (rest y))))) 
-
+(allroot #'(lambda(x) (sin (* 6.28 x))) '(0.25 0.75 1.25 1.75 2.25) 0.0001)
+(allroot #'(lambda(x) (sin (* 6.28 x))) '(0.25 0.9 0.75 1.25 1.75 2.25) 0.0001) 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 2.3
 ;;; allind (f a b N tol)
@@ -223,7 +217,14 @@
 ;;; sin usar allroot.
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun intervals (a b N)
+  (let ((c (our-medium-point a b)))
+    (if (equal N 0)
+        (list a b)
+    (append (intervals a c (- N 1)) (intervals c b (- N 1))))))
 
+(intervals 1 100 4)
+  
 (defun allind (f a b N tol) ...)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
