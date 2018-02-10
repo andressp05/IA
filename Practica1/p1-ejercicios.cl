@@ -185,9 +185,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun allroot (f lst tol)
-  (if (or (equal lst nil) (equal (rest lst) nil))
+  (if (or (equal lst nil) (equal (rest lst) nil)) ;; Caso base: Si la lista no tiene elementos o solo 1.
       nil
-    (append (list (bisect f (first lst) (second lst) tol)) (allroot f (rest lst) tol))))
+    (mapcan #'(lambda (x) (unless (null x) (list x))) ;;Lo utilizamos para eliminar los nil de la lista
+    (append (list (bisect f (first lst) (second lst) tol))  ;; lista de soluciones
+            (allroot f (rest lst) tol)))))
 
 (allroot #'(lambda(x) (sin (* 6.28 x))) '(0.25 0.75 1.25 1.75 2.25) 0.0001)
 (allroot #'(lambda(x) (sin (* 6.28 x))) '(0.25 0.9 0.75 1.25 1.75 2.25) 0.0001) 
@@ -217,35 +219,27 @@
 ;;; sin usar allroot.
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun our-size-interval (a b N)
-	(/ (+ a b) (expt 2 N)))
 
-(defun our-division-rec (a b N)
-	(let ((extrem (+ a N)))
-		(if (= extrem b)
-			(list a b)
-			(cons a (our-division-rec extrem b N)))))
+(defun div-int (a b N)
+  (let ((c (our-medium-point a b)))
+    (if (equal N 0)
+        (list a)
+      (append (div-int a c (- N 1)) (div-int c b (- N 1))))))
 
-(defun our-division (a b N)
-	(our-division-rec a b (our-size-interval a b N)))
+(div-int 0 8 3)
 
-(our-division 0 100 2)
-
-;;(defun intervals (a b N)
-;;  (let ((c (our-medium-point a b)))
-;;    (if (equal N 0)
-;;        (list a b)
-;;    (append (intervals-left a c (- N 1)) (intervals-right c b (- N 1))))))
-  
 (defun allind (f a b N tol) 
-	(allroot f (our-division a b N) tol))
+  (allroot f (append (div-int a b N) (list b)) tol))
 
-(allind #'(lambda(x) (sin (* 6.28 x))) 0 3 2 0.01) ;;Funciona
-(allind #'(lambda(x) (sin (* 6.28 x))) 0.25 2.25 2 0.01) ;;function-call stack overflow
+
+
+(allind #'(lambda(x) (sin (* 6.28 x))) 0 3 2 0.01) ;
+(allind #'(lambda(x) (sin (* 6.28 x))) 0.1 2.25 3 0.0001)
+(allind #'(lambda(x) (sin (* 6.28 x))) 0.25 2.25 3 0.01) ;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 3.1
-;;; combine-elt-lst (elt lst)
+;;; combine-elt-lst (elem lst)
 ;;; Combina un elemento dado con todos los elementos de una lista
 ;;;
 ;;; INPUT: elt: elemento que se combinará con los de la lista
@@ -255,7 +249,17 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun combine-elt-lst (elt lst) ...)
+(defun combine-elem-lst (elem lst)
+  (if (equal lst nil)
+      nil
+    (if (equal (rest lst) nil)
+        (list(list elem (first lst)))
+      (append 
+       (list(list elem (first lst))) 
+       (combine-elem-lst elem (rest lst))))))
+
+(combine-elem-lst 'a nil)
+(combine-elem-lst 'a '(1 2 3))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 3.2
@@ -269,7 +273,15 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun combine-lst-lst (lst1 lst2) ...)
+(defun combine-lst-lst (lst1 lst2)
+  (if (or (equal lst1 nil) (equal lst2 nil))
+      nil
+    (append (combine-elem-lst (first lst1) lst2) (combine-lst-lst (rest lst1) lst2))))
+
+(combine-lst-lst nil nil)
+(combine-lst-lst '(a b c) nil)
+(combine-lst-lst NIL '(a b c))
+(combine-lst-lst '(a b c) '(1 2))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 3.3
@@ -283,9 +295,24 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun combine-list-of-lsts (lstolsts) ...)
+(defun combine-list-of-lsts (lstolsts)
+  (if (equal lstolsts nil)
+      nil
+    (if (member nil lstolsts)
+        nil
+      (append 
+     (combine-lst-lst (first lstolsts) (first (rest lstolsts)))
+     (combine-list-of-lsts (rest lstolsts))))))
+    
+    
+  
 
 
+(combine-list-of-lsts '(() (+ -) (1 2 3 4)))
+(combine-list-of-lsts '((a b c) () (1 2 3 4)))
+(combine-list-of-lsts '((a b c) (1 2 3 4) ()))
+(combine-list-of-lsts '((1 2 3 4)))
+(combine-list-of-lsts '((a b c) (+ -) (1 2 3 4))) 
 
 (defun f (x y) (+ y x))
 
