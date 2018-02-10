@@ -217,15 +217,31 @@
 ;;; sin usar allroot.
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun intervals (a b N)
-  (let ((c (our-medium-point a b)))
-    (if (equal N 0)
-        (list a b)
-    (append (intervals a c (- N 1)) (intervals c b (- N 1))))))
+(defun our-size-interval (a b N)
+	(/ (+ a b) (expt 2 N)))
 
-(intervals 1 100 4)
+(defun our-division-rec (a b N)
+	(let ((extrem (+ a N)))
+		(if (= extrem b)
+			(list a b)
+			(cons a (our-division-rec extrem b N)))))
+
+(defun our-division (a b N)
+	(our-division-rec a b (our-size-interval a b N)))
+
+(our-division 0 100 2)
+
+;;(defun intervals (a b N)
+;;  (let ((c (our-medium-point a b)))
+;;    (if (equal N 0)
+;;        (list a b)
+;;    (append (intervals-left a c (- N 1)) (intervals-right c b (- N 1))))))
   
-(defun allind (f a b N tol) ...)
+(defun allind (f a b N tol) 
+	(allroot f (our-division a b N) tol))
+
+(allind #'(lambda(x) (sin (* 6.28 x))) 0 3 2 0.01) ;;Funciona
+(allind #'(lambda(x) (sin (* 6.28 x))) 0.25 2.25 2 0.01) ;;function-call stack overflow
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 3.1
