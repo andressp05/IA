@@ -149,23 +149,17 @@
 (defun our-medium-point (a b)
   (/ (+ a b) 2))
 
-(defun our-decision (f a b)
-  (if (> (* (funcall f a) (funcall f (our-medium-point a b))) 0)
-
  (defun bisect (f a b tol)
-  (let (c (our-medium-point a b))
-  (cond ((< (our-distance a b) tol) (our-medium-point a b))
-        ((equal a 0) a)
+  (let ((c (our-medium-point a b)))
+  (cond ((equal a 0) a)
         ((equal b 0) b)
         ((> (* (funcall f a) (funcall f b)) 0) nil)
-        ((and (> a 0) (> c 0)) (bisect (f, c, b))
-        
-        
-  
-        
-      
-
-
+        ((< (our-distance a b) tol) c)
+        ((= c 0) c)
+        ((< (* (funcall f a) (funcall f c)) 0) (bisect f a c tol))
+        ((< (* (funcall f b) (funcall f c)) 0) (bisect f c b tol)))))
+         
+(bisect #'(lambda (z) (* z z z)) -4 5 0.5)          
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 2.2
 ;;; allroot (f lst tol)
