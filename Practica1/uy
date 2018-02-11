@@ -1,0 +1,15 @@
+ ;;;COPIADO DE INTERNET PERO FUNCIONA
+(defun cartesian-product (a b)
+  (mapcan (lambda (x) 
+  	(mapcar (lambda (y)
+          (if (listp x)
+            (append x (list y)) (list x y)))
+        b)) a))
+
+(reduce #'cartesian-product '((a b) (1 2) (x y)))
+(reduce #'cartesian-product '((a b c) (+ -) (1 2 3 4)))
+
+(defun mierda (lstolsts)
+	(if (equal lstolsts nil)
+		nil
+		(reduce #'cartesian-product lstolsts)))
