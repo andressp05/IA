@@ -12,33 +12,37 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun is-ok (x y) ;; Funcion que recorre la lista comprobando si los elementos son todos positivos y si ambas listas son de igual tamaño
-  (cond ((and (null x) (null y)) T)
-        ( (and (null x)
+  (cond ((and (null x) (null y)) T) ;; Comprobamos que ambas listas son distintas de nil -> T
+        ( (and (null x) ;; Si x es nil e y no lo es -> nil
                (not (null y)))
          NIL)
-        ( (and (null y)
+        ( (and (null y) ;; Sy y es nil y x no lo es -> nil
                (not (null x)))
          NIL)
-       ((< (first x) 0) NIL) 
+       ((every #'zerop x) nil) ;; Comprobamos si x e y son iguales al vector 0 -> nil
+       ((every #'zerop y) nil)
+       ((< (first x) 0) NIL) ;;Si el primer elemento de cada lista es negativo -> nil
        ((< (first y) 0) NIL) 
-       (T (is-ok (rest x) (rest y)))))
+       (T (is-ok (rest x) (rest y))))) ;;Hacemos la llamado recursiva para recorrer ambas listas.
 
-(is-ok '(1 2 3) '(3 4 5))
-  
+(is-ok '(1 2 3) '(3 4 5)) ;; t
+(is-ok '(1 2 3) '(3 4 -5)) ;; nil
+(is-ok '(1 2 3) '(0 0 0))  
 
 (defun our-pesc-rec (x y) ;;Calcula el producto escalar de dos vectores representados como listas
-  (if (or (equal nil x) (equal nil y))
+  (if (or (equal nil x) (equal nil y)) ;; Si x o y es null devolvemos 0
       0
-    (+ (* (first x) (first y)) (our-pesc-rec (rest x) (rest y))))) 
+    (+ (* (first x) (first y)) (our-pesc-rec (rest x) (rest y)))))  ;; Calculamos sum ( x(i) * y(i)) con 1 < i < long x
 
 (our-pesc-rec '(1 2 3) '( 2 5 6))
   
 (defun sc-rec (lista1 lista2)
-  (if (equal NIL (is-ok lista1 lista2))
+  (if (equal NIL (is-ok lista1 lista2)) ;;Comprobamos que a lista cumple las condiciones del enunciado
       NIL
     (/ (our-pesc-rec lista1 lista2) (*(sqrt (our-pesc-rec lista1 lista1)) (sqrt (our-pesc-rec lista2 lista2))))))
-
+    ;; El producto escalar de un vector consigo mismo es su norma al cuadrado
 (sc-rec '(1 0) '(0 1))
+(sc-rec '() '(0 1))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -54,7 +58,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun our-pesc-map (lista1 lista2)
-  (reduce '+ (mapcar #'* lista1 lista2)))
+  (reduce '+ (mapcar #'* lista1 lista2))) ;; Sum (x(i) * y(i)) com 1< i <len x
 
 (defun sc-mapcar (lista1 lista2) ;; Utilizamos las funciones recursivas del primer apartado.
   (if (equal NIL (is-ok lista1 lista2))
@@ -82,12 +86,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun our-conf (x vs conf)
-  (remove-if #'(lambda (y) (< (sc-mapcar x y) conf)) vs))
+  (remove-if #'(lambda (y) (< (sc-mapcar x y) conf)) vs)) ;; Eliminamos de de vs las listas cuyo cos con x sea menor que una constante
 
 (our-conf '(1 2 3) '((1 2 3) (2 3 4) (1 0 0)) 0.5)
 
 (defun sc-conf (x vs conf)
-  (sort (our-conf x vs conf) #'(lambda (z y) (> (sc-mapcar x z) (sc-mapcar x y)))))
+  (sort (our-conf x vs conf) #'(lambda (z y) (> (sc-mapcar x z) (sc-mapcar x y))))) ;; Ordenamos de mayor a menor e vector en función de su cos con la lista x.
 
 (sc-conf '(1 2 3) '((1 2 3) (3 4 5) (1 0 0) (1 1 1)) 0.9)
 
@@ -123,8 +127,7 @@
 (sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 3 6) (3 2 3)) #'sc-rec)
 (sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 6 8)) #'sc-mapcar)
 (sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 3 6) (3 2 3)) #'sc-mapcar)
-(sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 3 6) (3 2)) #'sc-mapcar)
-(sc-classifier '((1 43 23 12) (2 33 54 24)) '((1 3 22 134) (2 43 26 58)) #'sc-rec)
+(sc-classifier '((1 43 23 12) (2 33 54 24)) '((1 3 22 134) (2 43 26 58)) #'sc-rec) 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 2.1
@@ -250,13 +253,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun combine-elem-lst (elem lst)
+  (let ((k (list(list elem (first lst)))))
   (if (equal lst nil)
       nil
     (if (equal (rest lst) nil)
-        (list(list elem (first lst)))
+        k
       (append 
-       (list(list elem (first lst))) 
-       (combine-elem-lst elem (rest lst))))))
+       k 
+       (combine-elem-lst elem (rest lst)))))))
 
 (combine-elem-lst 'a nil)
 (combine-elem-lst 'a '(1 2 3))
@@ -282,6 +286,8 @@
 (combine-lst-lst '(a b c) nil)
 (combine-lst-lst NIL '(a b c))
 (combine-lst-lst '(a b c) '(1 2))
+(combine-lst-lst '(a b c d e f) '(1 2))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 3.3
@@ -300,19 +306,13 @@
       nil
     (if (member nil lstolsts)
         nil
-      (append 
-     (combine-lst-lst (first lstolsts) (first (rest lstolsts)))
-     (combine-list-of-lsts (rest lstolsts))))))
+     (combine-lst-lst (first lstolsts) (combine-list-of-lsts (rest lstolsts))))))
     
-    
-  
-
-
 (combine-list-of-lsts '(() (+ -) (1 2 3 4)))
 (combine-list-of-lsts '((a b c) () (1 2 3 4)))
 (combine-list-of-lsts '((a b c) (1 2 3 4) ()))
 (combine-list-of-lsts '((1 2 3 4)))
-(combine-list-of-lsts '((a b c) (+ -) (1 2 3 4))) 
+(combine-list-of-lsts '((a b c) (+ -) (1 2 3 4)))
 
 (defun f (x y) (+ y x))
 
