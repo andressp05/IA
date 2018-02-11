@@ -11,30 +11,23 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun is-ok (x y) ;; Funcion que recorre la lista comprobando si los elementos son todos positivos y si ambas listas son de igual tamaño
-  (cond ((and (null x) (null y)) T) ;; Comprobamos que ambas listas son distintas de nil -> T
-        ( (and (null x) ;; Si x es nil e y no lo es -> nil
-               (not (null y)))
-         NIL)
-        ( (and (null y) ;; Sy y es nil y x no lo es -> nil
-               (not (null x)))
-         NIL)
-       ((every #'(lambda (z) (= z 0)) x) 200)
-       ((< (first x) 0) NIL) ;;Si el primer elemento de cada lista es negativo -> nil
-       ((< (first y) 0) NIL) 
-       (T (is-ok (rest x) (rest y))))) ;;Hacemos la llamado recursiva para recorrer ambas listas.
+(defun is-ok (x y)
+  (cond ((or (equal nil x) (equal nil y)) nil)
+        ((or (every #' zerop x) (every #' zerop y)) nil)
+        (t t)))
 
 (is-ok '(1 2 3) '(3 4 5)) ;; t
 (is-ok '(1 2 3) '(3 4 -5)) ;; nil
-(is-ok '(0 0 0) '(0 0 0));; nil
-(is-ok '(2 2 0) '(1 1 1))
+(is-ok '(0 0 0) '(1 0 0));; nil
+(is-ok '(1 0 0) '());; nil
+
 
 (defun our-pesc-rec (x y) ;;Calcula el producto escalar de dos vectores representados como listas
   (if (or (equal nil x) (equal nil y)) ;; Si x o y es null devolvemos 0
       0
     (+ (* (first x) (first y)) (our-pesc-rec (rest x) (rest y)))))  ;; Calculamos sum ( x(i) * y(i)) con 1 < i < long x
 
-(our-pesc-rec '(1 2 3) '( 2 5 6))
+(our-pesc-rec '(1 2 3) '( 2 -5 6))
   
 (defun sc-rec (lista1 lista2)
   (if (equal NIL (is-ok lista1 lista2)) ;;Comprobamos que a lista cumple las condiciones del enunciado
@@ -66,7 +59,7 @@
       nil
      (/ (our-pesc-map lista1 lista2) (*(sqrt (our-pesc-map lista1 lista1)) (sqrt (our-pesc-map lista2 lista2))))))
 
-(sc-mapcar '(1 2 3) '(2 3 4))
+(sc-mapcar '(1 2 3) '(1 0 0))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -134,23 +127,23 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Estudio de tiempos
 (time (sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 6 8)) #'sc-rec)) 
-;; time = 0.002000 sec
-;; Cputime = 0.0000000 sec
+;; Realtime = 0.010000 sec
+;; Cputime = 0.015625 sec
 (time (sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 6 8)) #'sc-mapcar)) 
-;; time =  0.001000 sec
-;; Cputime = 0.0000000 sec
+;; Realtime = 0.000000 sec 
+;; Cputime =  0.000000 sec
 (time (sc-classifier '((1 2 3 4 5 6 7) (2 3 5 5 6 7 8) (3 6 8 6 7 7 7)) '((1 3 5 2 2 2 2) (2 6 8 4 3 4 6)) #'sc-rec)) 
-;; Realtime = 0.009000 sec 
-;; Cputime = 0.015625 sec user
+;; Realtime = 0.001000 sec
+;; Cputime =  0.000000 sec
 (time (sc-classifier '((1 2 3 4 5 6 7) (2 3 5 5 6 7 8) (3 6 8 6 7 7 7)) '((1 3 5 2 2 2 2) (2 6 8 4 3 4 6)) #'sc-mapcar)) 
-;; Realtime = 0.003000 sec
-;; Cputime = 0.0.015625 sec
+;; Realtime = 0.001000 sec
+;; Cputime =  0.000000 sec 
 (time (sc-classifier '((1 2 3 4 5 6 7 3 4 4 4 4 4 4 5) (2 3 5 5 6 7 8 2 2 2 2 2 3 4 5) (3 6 8 6 7 7 7 1 2 1 2 3 5 6 7)) '((1 3 5 2 2 2 2 6 8 4 2 1 9 9 9) (2 6 8 4 3 4 6 1 3 4 6 7 2 2 2)) #'sc-rec))
-;; Realtime =  0.022000 sec
-;; Cputime = 0.015625 sec
+;; Realtime = 0.007000 sec
+;; Cputime = 0.015625 sec 
 (time (sc-classifier '((1 2 3 4 5 6 7 3 4 4 4 4 4 4 5) (2 3 5 5 6 7 8 2 2 2 2 2 3 4 5) (3 6 8 6 7 7 7 1 2 1 2 3 5 6 7)) '((1 3 5 2 2 2 2 6 8 4 2 1 9 9 9) (2 6 8 4 3 4 6 1 3 4 6 7 2 2 2)) #'sc-mapcar))
-;; Realtime = 0.012000 sec
-;; Cputime = 0.015625 sec
+;; Realtime = 0.000000 sec
+;; Cputime = 0.000000 sec
 
 ;; Los resultados obtenidos se comentarán en la memoria
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -280,13 +273,9 @@
 
 (defun combine-elem-lst (elem lst) 
   (let ((k (list(list elem (first lst))))) ;; Con esta dfinicion no repetimos codigo
-  (if (equal lst nil) ;; Si lst nil -> nil
-      nil
-    (if (equal (rest lst) nil) ;; CAso base: si la lista tiene un elemento -> k
-        k
-      (append 
-       k 
-       (combine-elem-lst elem (rest lst)))))))
+  (cond ((equal lst nil) nil) ;; Caso base: lst nil -> nil
+        ((equal (rest lst) nil) k) ;; Caso base: si la lista tiene un elemento -> k
+        ( t (append k (combine-elem-lst elem (rest lst))))))
 
 (combine-elem-lst 'a nil)
 (combine-elem-lst 'a '(1))
@@ -333,7 +322,20 @@
       nil
     (if (member nil lstolsts)
         nil
-     (combine-lst-lst (first lstolsts) (combine-list-of-lsts (rest lstolsts))))))
+      (combine-lst-lst (first lstolsts) (combine-list-of-lsts (rest lstolsts))))))
+
+(defun cartesian-product (a b)
+  (mapcan (lambda (x) (mapcar (lambda (y) (if (listp x) (append x (list y)) (list x y))) b)) a))
+
+(defun siuu (a b)
+  (combine-lst-lst a b))
+
+(defun res  (lstolsts)
+  (if (equal lstolsts nil)
+      nil
+    (reduce #'siuu lstolsts)))
+
+(res '((a b c) (+ -) (1 2 3 4)))
     
 (combine-list-of-lsts '(() (+ -) (1 2 3 4)))
 (combine-list-of-lsts '((a b c) () (1 2 3 4)))
