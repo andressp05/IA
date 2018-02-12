@@ -11,6 +11,11 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Funcion que comprueba si las listas cumplen:
+;; 1) Son distintas de (000..0)
+;; 2) Son distintas de nil
+;; Devuelve nil en caso de que no se cumpla 1) y 2) t en caso contrario
+
 (defun is-ok (x y)
   (cond ((or (equal nil x) (equal nil y)) nil)
         ((or (every #' zerop x) (every #' zerop y)) nil)
@@ -22,17 +27,20 @@
 (is-ok '(1 0 0) '());; nil
 
 
-(defun our-pesc-rec (x y) ;;Calcula el producto escalar de dos vectores representados como listas
-  (if (or (equal nil x) (equal nil y)) ;; Si x o y es null devolvemos 0
+(defun our-pesc-rec (x y)                    ;;Calcula el producto escalar de dos vectores representados como listas
+  (if (or (equal nil x) (equal nil y))       ;; Si x o y es null devolvemos 0
       0
-    (+ (* (first x) (first y)) (our-pesc-rec (rest x) (rest y)))))  ;; Calculamos sum ( x(i) * y(i)) con 1 < i < long x
+    (+ (* (first x) (first y))
+       (our-pesc-rec (rest x) (rest y)))))  ;; Calculamos sum ( x(i) * y(i)) con 1 < i < long x
 
 (our-pesc-rec '(1 2 3) '( 2 -5 6))
   
 (defun sc-rec (lista1 lista2)
-  (if (equal NIL (is-ok lista1 lista2)) ;;Comprobamos que a lista cumple las condiciones del enunciado
+  (if (equal NIL (is-ok lista1 lista2))     ;;Comprobamos que a lista cumple las condiciones del enunciado
       NIL
-    (/ (our-pesc-rec lista1 lista2) (*(sqrt (our-pesc-rec lista1 lista1)) (sqrt (our-pesc-rec lista2 lista2))))))
+    (/ (our-pesc-rec lista1 lista2)
+       (*(sqrt (our-pesc-rec lista1 lista1)) (sqrt (our-pesc-rec lista2 lista2))))))
+
 ;; El producto escalar de un vector consigo mismo es su norma al cuadrado
 
 (sc-rec '(1 0) '(0 1)) ;; 0.0
@@ -52,9 +60,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun our-pesc-map (lista1 lista2)
-  (reduce '+ (mapcar #'* lista1 lista2))) ;; Sum (x(i) * y(i)) com 1< i <len x
+  (reduce '+ (mapcar #'* lista1 lista2)))     ;; Sum (x(i) * y(i)) com 1< i <len x
 
-(defun sc-mapcar (lista1 lista2) ;; Utilizamos las funciones recursivas del primer apartado.
+(defun sc-mapcar (lista1 lista2)              ;; Utilizamos las funciones recursivas del primer apartado.
   (if (equal NIL (is-ok lista1 lista2))
       nil
      (/ (our-pesc-map lista1 lista2) (*(sqrt (our-pesc-map lista1 lista1)) (sqrt (our-pesc-map lista2 lista2))))))
@@ -75,18 +83,16 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;(defun our-similarity-cos (x vs)
-;;;;;;(mapcar #'(lambda (y) (sc-mapcar x y)) vs))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun our-conf (x vs conf)
-  (remove-if #'(lambda (y) (< (sc-mapcar x y) conf)) vs)) ;; Eliminamos de vs las listas cuyo cos con x sea menor que una constante dada
+  (remove-if #'(lambda (y) (< (sc-mapcar x y) conf)) vs))     ;; Eliminamos de vs las listas cuyo cos con x sea menor que una constante dada
 
 (our-conf '(1 2 3) '((1 2 3) (2 3 4) (1 0 0)) 0.5)
 (sc-mapcar '(1 2 3) '(1 0 0))
 
 (defun sc-conf (x vs conf)
-  (sort (our-conf x vs conf) #'(lambda (z y) (> (sc-mapcar x z) (sc-mapcar x y))))) ;; Ordenamos de mayor a menor el vector en función de su cos con la lista x.
+  (sort (our-conf x vs conf)
+        #'(lambda (z y) (> (sc-mapcar x z) (sc-mapcar x y))))) ;; Ordenamos de mayor a menor el vector en función de su cos con la lista x.
 
 (sc-conf '(1 2 3) '((1 2 3) (3 4 5) (1 0 0) (1 1 1)) 0.9)
 
@@ -104,17 +110,19 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-(defun our-similarity-cos (cats lista func) ;; Forma una lista de pares de la forma (vector , cos <lista y>) con y perteneciente a cats
-  (mapcar #'(lambda (y) (append(list(first y) (funcall func (rest lista) (rest y))))) cats))
+(defun our-similarity-cos (cats lista func)                ;; Forma una lista de pares de la forma (vector , cos <lista y>) con y perteneciente a cats
+  (mapcar #'(lambda (y) (append(list(first y) (funcall func (rest lista) (rest y)))))
+    cats))
   
 (our-similarity-cos '((1 2 3) ( 2 3 4) (6 6 8)) '(3 3 3) #'sc-rec)
 
-(defun our-max-similarity (cats lista func) ;; Ordena los pares en función de la segunda coordenada.
-  (first (sort(our-similarity-cos cats lista func) #'(lambda (z y) (> (second z) (second y))))))
+(defun our-max-similarity (cats lista func)                ;; Ordena los pares en función de la segunda coordenada.
+  (first (sort(our-similarity-cos cats lista func)
+               #'(lambda (z y) (> (second z) (second y))))))
 
 (our-max-similarity '((1 2 3) ( 2 3 5) (6 6 8)) '( 3 6 8) #'sc-rec)
 
-(defun sc-classifier (cats texts func) ;;Aplica las funciones anteriores a un conjunto de vectores.
+(defun sc-classifier (cats texts func)                     ;;Aplica las funciones anteriores a un conjunto de vectores.
   (mapcar #'(lambda (z) (our-max-similarity cats z func)) texts))
 
 
@@ -126,24 +134,22 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Estudio de tiempos
-(time (sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 6 8)) #'sc-rec)) 
-;; Realtime = 0.010000 sec
-;; Cputime = 0.015625 sec
-(time (sc-classifier '((1 2 3) (2 3 5) (3 6 8)) '((1 3 5) (2 6 8)) #'sc-mapcar)) 
-;; Realtime = 0.000000 sec 
-;; Cputime =  0.000000 sec
-(time (sc-classifier '((1 2 3 4 5 6 7) (2 3 5 5 6 7 8) (3 6 8 6 7 7 7)) '((1 3 5 2 2 2 2) (2 6 8 4 3 4 6)) #'sc-rec)) 
-;; Realtime = 0.001000 sec
-;; Cputime =  0.000000 sec
-(time (sc-classifier '((1 2 3 4 5 6 7) (2 3 5 5 6 7 8) (3 6 8 6 7 7 7)) '((1 3 5 2 2 2 2) (2 6 8 4 3 4 6)) #'sc-mapcar)) 
-;; Realtime = 0.001000 sec
-;; Cputime =  0.000000 sec 
 (time (sc-classifier '((1 2 3 4 5 6 7 3 4 4 4 4 4 4 5) (2 3 5 5 6 7 8 2 2 2 2 2 3 4 5) (3 6 8 6 7 7 7 1 2 1 2 3 5 6 7)) '((1 3 5 2 2 2 2 6 8 4 2 1 9 9 9) (2 6 8 4 3 4 6 1 3 4 6 7 2 2 2)) #'sc-rec))
-;; Realtime = 0.007000 sec
-;; Cputime = 0.015625 sec 
+;;real time  0.002000 sec
 (time (sc-classifier '((1 2 3 4 5 6 7 3 4 4 4 4 4 4 5) (2 3 5 5 6 7 8 2 2 2 2 2 3 4 5) (3 6 8 6 7 7 7 1 2 1 2 3 5 6 7)) '((1 3 5 2 2 2 2 6 8 4 2 1 9 9 9) (2 6 8 4 3 4 6 1 3 4 6 7 2 2 2)) #'sc-mapcar))
-;; Realtime = 0.000000 sec
-;; Cputime = 0.000000 sec
+;;real time  0.000000 sec
+(time (sc-classifier (make-list 8 :initial-element (make-list 20 :initial-element 1)) (make-list 8 :initial-element (make-list 20 :initial-element 2)) #'sc-rec))
+;;real time  0.035000 sec
+(time (sc-classifier (make-list 8 :initial-element (make-list 20 :initial-element 1)) (make-list 8 :initial-element (make-list 20 :initial-element 2)) #'sc-mapcar))
+;;real time  0.006000 sec
+(time (sc-classifier (make-list 12 :initial-element (make-list 50 :initial-element 1)) (make-list 12 :initial-element (make-list 50 :initial-element 2)) #'sc-rec))
+;;real time  0.182000 sec
+(time (sc-classifier (make-list 12 :initial-element (make-list 50 :initial-element 1)) (make-list 12 :initial-element (make-list 50 :initial-element 2)) #'sc-mapcar))
+; real time  0.014000 sec
+(time (sc-classifier (make-list 15 :initial-element (make-list 100 :initial-element 1)) (make-list 15 :initial-element (make-list 100 :initial-element 2)) #'sc-rec))
+;;real time  0.568000 sec
+(time (sc-classifier (make-list 15 :initial-element (make-list 100 :initial-element 1)) (make-list 15 :initial-element (make-list 100 :initial-element 2)) #'sc-mapcar))
+;; real time  0.025000 sec 
 
 ;; Los resultados obtenidos se comentarán en la memoria
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -164,20 +170,20 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun our-distance (a b) ;;Calcula la distancia entre dos reales
+(defun our-distance (a b)                            ;;Calcula la distancia entre dos reales
   (abs (- b a)))
 
-(defun our-medium-point (a b) ;;Calcula el punto medio entre dos extremos reales
+(defun our-medium-point (a b)                        ;;Calcula el punto medio entre dos extremos reales
   (/ (+ a b) 2))
 
- (defun bisect (f a b tol) ;; Aplica el algoritmo de la bisección para encontrar soluciones de f (f(a) = 0).
-  (let ((c (our-medium-point a b))) ;; Definimos c = punto medio de (a , b)
-    (cond ((equal (funcall f a) 0) a) ;; Si f(a) = 0 -> a
-        ((equal (funcall f b) 0) b) ;; Si f(b) = 0 -> b
-        ((> (* (funcall f a) (funcall f b)) 0) nil) ;; Si f(a) * f(b) > 0 -> nil (ambas son positvas o negativas)
-        ((< (our-distance a b) tol) c) ;; Si el tamaño de (a , b) es menor que tol -> punto medio (a , b)
+ (defun bisect (f a b tol)                           ;; Aplica el algoritmo de la bisección para encontrar soluciones de f (f(a) = 0).
+  (let ((c (our-medium-point a b)))                  ;; Definimos c = punto medio de (a , b)
+    (cond ((equal (funcall f a) 0) a)                ;; Si f(a) = 0 -> a
+        ((equal (funcall f b) 0) b)                  ;; Si f(b) = 0 -> b
+        ((> (* (funcall f a) (funcall f b)) 0) nil)  ;; Si f(a) * f(b) > 0 -> nil (ambas son positvas o negativas)
+        ((< (our-distance a b) tol) c)               ;; Si el tamaño de (a , b) es menor que tol -> punto medio (a , b)
         ((= (funcall f c) 0) c) ;; Si f(c) = 0 -> c
-        ((< (* (funcall f a) (funcall f c)) 0) (bisect f a c tol)) ;; Aplicamos la recursividad en uno de los dos intervalos 
+        ((< (* (funcall f a) (funcall f c)) 0) (bisect f a c tol))    ;; Aplicamos la recursividad en uno de los dos intervalos 
         ((< (* (funcall f b) (funcall f c)) 0) (bisect f c b tol)))))
          
 (bisect #'(lambda (z) (* z z z)) -4 5 0.5)
@@ -205,11 +211,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun allroot (f lst tol)
-  (if (or (equal lst nil) (equal (rest lst) nil)) ;; Caso base: Si la lista no tiene elementos o solo 1.
+  (if (or (equal lst nil) (equal (rest lst) nil))            ;; Caso base: Si la lista no tiene elementos o solo 1.
       nil
-    (mapcan #'(lambda (x) (unless (null x) (list x))) ;;Lo utilizamos para eliminar los nil de la lista
-    (append (list (bisect f (first lst) (second lst) tol))  ;; lista de soluciones
-            (allroot f (rest lst) tol)))))
+    (mapcan #'(lambda (x) (unless (null x) (list x)))        ;;Lo utilizamos para eliminar los nil de la lista
+    (append (list (bisect f (first lst) (second lst) tol))   ;; lista de soluciones
+            (allroot f (rest lst) tol))))) 
 
 (allroot #'(lambda(x) (sin (* 6.28 x))) '(0.25 0.75 1.25 1.75 2.25) 0.0001)
 (allroot #'(lambda(x) (sin (* 6.28 x))) '(0.25 0.9 0.75 1.25 1.75 2.25) 0.0001) 
@@ -240,18 +246,18 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun div-int (a b N) ;; Dividimos un intervalo (a , b) en 2^ns intervalos
-  (let ((c (our-medium-point a b))) ;;Definimos c = punto intermedio
+(defun div-int (a b N)                                           ;; Dividimos un intervalo (a , b) en 2^ns intervalos
+  (let ((c (our-medium-point a b)))                              ;; Definimos c = punto intermedio
     (if (equal N 0) ;;Caso base: N = 0 -> 1 intervalo
         (list a)
-      (append (div-int a c (- N 1)) (div-int c b (- N 1)))))) ;; dividimos cada intervalo por la mita hasta que n = 0
+      (append (div-int a c (- N 1))
+              (div-int c b (- N 1))))))                           ;; Dividimos cada intervalo por la mita hasta que n = 0
 
 ;; La funcion anterior nos devuelve una lista con todos las divisiones del intervalo sin incluir el extremo b por eso en la siguiente funcion se añade a mano.
 
-(div-int 0 8 3)
 
 (defun allind (f a b N tol) 
-  (allroot f (append (div-int a b N) (list b)) tol)) ;;Añadimos b y calculamos todas las soluciones con la funcion del apartado 2.2
+  (allroot f (append (div-int a b N) (list b)) tol))             ;;Añadimos b y calculamos todas las soluciones con la funcion del apartado 2.2
 
 
 
@@ -272,10 +278,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun combine-elem-lst (elem lst) 
-  (let ((k (list(list elem (first lst))))) ;; Con esta dfinicion no repetimos codigo
-  (cond ((equal lst nil) nil) ;; Caso base: lst nil -> nil
-        ((equal (rest lst) nil) k) ;; Caso base: si la lista tiene un elemento -> k
-        ( t (append k (combine-elem-lst elem (rest lst))))))
+  (let ((k (list(list elem (first lst)))))                             ;; Con esta dfinicion no repetimos codigo
+  (cond ((equal lst nil) nil)                                          ;; Caso base: lst nil -> nil
+        ((equal (rest lst) nil) k)                                     ;; Caso base: si la lista tiene un elemento -> k
+        ( t (append k (combine-elem-lst elem (rest lst)))))))
 
 (combine-elem-lst 'a nil)
 (combine-elem-lst 'a '(1))
@@ -293,10 +299,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun combine-lst-lst (lst1 lst2)
-  (if (or (equal lst1 nil) (equal lst2 nil)) ;; Caso base: Si ambas lista son nil -> nil
+  (if (or (equal lst1 nil) (equal lst2 nil))                            ;; Caso base: Si ambas lista son nil -> nil
       nil
-    (append (combine-elem-lst (first lst1) lst2) (combine-lst-lst (rest lst1) lst2)))) ;; Combinamos el elemento primero de la primera lista con la segunda
-;; y aplicamos recursividad sobre la lst1
+    (append (combine-elem-lst (first lst1) lst2) 
+            (combine-lst-lst (rest lst1) lst2))))                       ;; Combinamos el elemento primero de la primera lista con la segunda
+                                                                        ;; y aplicamos recursividad sobre la lst1
 
 (combine-lst-lst nil nil)
 (combine-lst-lst '(a b c) nil)
@@ -316,27 +323,28 @@
 ;;; OUTPUT: devuelve una lista resultado de la combinaciÃ³n de todas las dadas
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun flatten (lst)  ;; Funcion que sirve para quitar parentesis a las listas
+  (cond 
+   ((null lst) NIL) 
+   ((atom (first lst)) 
+    (cons (first lst) (flatten (rest lst)))) 
+   (t (append (flatten (first lst)) (flatten (rest lst))))))
+
+(defun cl (lstolsts)
+  (if (equal lstolsts nil)                                             ;; Si lstolsts es nil devolvemos (nil)
+      (return-from cl nil))
+  (let ((comb (cl (rest lstolsts))))                                   ;;Definimos (cl (rest lstoslts)) = comb
+    (if (eql comb nil)                                                 ;;Si ha finalizado de recorrer la lista de listas devolvemos todo lo anterior
+       (first lstolsts)
+      (combine-lst-lst (first lstolsts) comb))))                       ;; LLamada recursiva
 
 (defun combine-list-of-lsts (lstolsts)
-  (if (equal lstolsts nil)
-      nil
-    (if (member nil lstolsts)
-        nil
-      (combine-lst-lst (first lstolsts) (combine-list-of-lsts (rest lstolsts))))))
+  (cond ((equal lstolsts nil) '(nil))                                  ;; Si el vector de listas es nil -> nil
+        ((some #'(lambda (z) (equal z nil)) lstolsts) nil)             ;; Si alguna lista de vector es nil -> nil
+        ((equal (rest lstolsts) nil) (mapcar #'list (first lstolsts))) ;; Si la el vector tiene solo una lista -> Convertimos cada elemento en una lista independiente
+        ( t (mapcar #'(lambda (x) (flatten x)) (cl lstolsts)))))       ;; En caso contrario, llamamos a la funcion recursciva cl
 
-(defun cartesian-product (a b)
-  (mapcan (lambda (x) (mapcar (lambda (y) (if (listp x) (append x (list y)) (list x y))) b)) a))
-
-(defun siuu (a b)
-  (combine-lst-lst a b))
-
-(defun res  (lstolsts)
-  (if (equal lstolsts nil)
-      nil
-    (reduce #'siuu lstolsts)))
-
-(res '((a b c) (+ -) (1 2 3 4)))
-    
+(combine-list-of-lsts '((a b c) (+ -) (1 2 3 4) (m o r e)))
 (combine-list-of-lsts '(() (+ -) (1 2 3 4)))
 (combine-list-of-lsts '((a b c) () (1 2 3 4)))
 (combine-list-of-lsts '((a b c) (1 2 3 4) ()))
