@@ -116,7 +116,7 @@
   
 (our-similarity-cos '((1 2 3) ( 2 3 4) (6 6 8)) '(3 3 3) #'sc-rec)
 
-(defun our-max-similarity (cats lista func)                ;; Ordena los pares en función de la segunda coordenada.
+(defun our-max-similarity (cats lista func)                ;; Ordena los pares en funcion de la segunda coordenada.
   (first (sort(our-similarity-cos cats lista func)
                #'(lambda (z y) (> (second z) (second y))))))
 
