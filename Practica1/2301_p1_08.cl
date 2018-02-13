@@ -4,6 +4,10 @@
 ;;; sc-rec (x y)
 ;;; Calcula la similitud coseno de un vector de forma recursiva
 ;;;
+;;; Se asume que los dos vectores de entrada tienen la misma longitud.
+;;; La semejanza coseno entre dos vectores que son listas vacías o que son
+;;; (0 0 ... 0) es NIL
+;;;
 ;;; INPUT: x: vector, representado como una lista
 ;;; y: vector, representado como una lista
 ;;;
@@ -52,6 +56,10 @@
 ;;; sc-mapcar (x y)
 ;;; Calcula la similitud coseno de un vector usando mapcar
 ;;;
+;;; Se asume que los dos vectores de entrada tienen la misma longitud.
+;;; La semejanza coseno entre dos vectores que son listas vacías o que son
+;;; (0 0 ... 0) es NIL
+;;;
 ;;; INPUT: x: vector, representado como una lista
 ;;; y: vector, representado como una lista
 ;;;
@@ -72,10 +80,10 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 1.2
-;;;	sc-conf (x vs conf)
+;;;	sc-conf (cat vs conf)
 ;;; Devuelve aquellos vectores similares a una categoria
 ;;;
-;;; INPUT: x: vector, representado como una lista
+;;; INPUT: cat: vector, representado como una lista
 ;;; vs: vector de vectores, representado como una lista de listas
 ;;; conf: Nivel de confianza
 ;;;
@@ -83,15 +91,15 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun our-conf (x vs conf)
-  (remove-if #'(lambda (y) (< (sc-mapcar x y) conf)) vs))     ;; Eliminamos de vs las listas cuyo cos con x sea menor que una constante dada
+(defun our-conf (cat vs conf)
+  (remove-if #'(lambda (y) (< (sc-mapcar cat y) conf)) vs))     ;; Eliminamos de vs las listas cuyo cos con x sea menor que una constante dada
 
 (our-conf '(1 2 3) '((1 2 3) (2 3 4) (1 0 0)) 0.5)
 (sc-mapcar '(1 2 3) '(1 0 0))
 
-(defun sc-conf (x vs conf)
-  (sort (our-conf x vs conf)
-        #'(lambda (z y) (> (sc-mapcar x z) (sc-mapcar x y))))) ;; Ordenamos de mayor a menor el vector en funcion de su cos con la lista x.
+(defun sc-conf (cat vs conf)
+  (sort (our-conf cat vs conf)
+        #'(lambda (z y) (> (sc-mapcar cat z) (sc-mapcar cat y))))) ;; Ordenamos de mayor a menor el vector en funcion de su cos con la lista x.
 
 (sc-conf '(1 2 3) '((1 2 3) (3 4 5) (1 0 0) (1 1 1)) 0.9)
 
@@ -101,7 +109,7 @@
 ;;; Clasifica a los textos en categorias.
 ;;;
 ;;; INPUT: cats: vector de vectores, representado como una lista de listas
-;;; vs: vector de vectores, representado como una lista de listas
+;;; texts: vector de vectores, representado como una lista de listas
 ;;; func: referencia a funcion para evaluar la similitud coseno
 ;;;
 ;;; OUTPUT: Pares identificador de categori­a con resultado de similitud coseno
@@ -156,7 +164,7 @@
 ;;; bisect (f a b tol)
 ;;; Encuentra una raiz de f entre los puntos a y b usando biseccion
 ;;;
-;;; Si f(a)f(b)>0 no hay garanti­a de que vaya a haber una rai­z en el
+;;; Si f(a)f(b)>=0 no hay garanti­a de que vaya a haber una rai­z en el
 ;;; intervalo, y la funcion devolvera NIL.
 ;;;
 ;;; INPUT: f: funcion de un solo parametro real con valores reales cuya
@@ -165,7 +173,7 @@
 ;;; b: b>a extremo superior del intervalo en el que queremos buscar la rai­z
 ;;; tol: tolerancia para el criterio de parada: si b-a < tol de la funcion
 ;;;
-;;; OUTPUT: devuelve (a+b)/2 como solucion
+;;; OUTPUT: raiz de la funcion, o NIL si no se encuentra raiz
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -232,7 +240,7 @@
 ;;; [a, b] es dividido en 2^N intervalos
 ;;; tol: tolerancia para el critreio de parada: si b-a < tol de la funcion
 ;;;
-;;; OUTPUT: devuelve (a+b)/2 como solucion
+;;; OUTPUT: lista con todas las raices encontradas
 ;;;
 ;;; El intervalo (a, b) es dividido en intervalos (x[i], x[i+1]) con
 ;;; x[i] = a + i*dlt; una raiz es buscada en cada intervalo, y todas las
