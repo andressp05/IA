@@ -428,10 +428,9 @@
 ;;            NIL en caso contrario. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun positive-literal-p (x)
-  ;;
-  ;; 4.1.1 Completa el codigo
-  ;;
-  )
+  (and (atom x)
+       (not (truth-value-p x))
+       (not (connector-p x))))
 
 ;; EJEMPLOS:
 (positive-literal-p 'p)
@@ -456,10 +455,11 @@
 ;;            NIL en caso contrario. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun negative-literal-p (x)
-  ;;
-  ;; 4.1.2 Completa el codigo
-  ;;
-  )
+  (and
+   (listp x)
+   (null  (cddr x))
+   (unary-connector-p (first x))
+   (positive-literal-p (first (rest x)))))
 
 ;; EJEMPLOS:
 (negative-literal-p '(¬ p))        ; T
@@ -485,13 +485,11 @@
 ;;            NIL en caso contrario. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun literal-p (x) 
-  ;;
-  ;; 4.1.3 Completa el codigo
-  ;;
-  )
+  (or (positive-literal-p x) 
+      (negative-literal-p x)))
 
 ;; EJEMPLOS:
-(literal-p 'p)             
+(literal-p 'p a)             
 (literal-p '(¬ p))      
 ;;; evaluan a T
 (literal-p '(p))
@@ -553,15 +551,38 @@
 ;;            NIL en caso contrario. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun wff-infix-p (x)
-  ;;
-  ;; 4.1.4 Completa el codigo
-  ;;
-  ) 
+  (unless (null x)
+    (or (literal-p x)
+        (and (listp x)
+             (let ((op1 (car x))
+                   (exp1 (cadr x))
+                   (list_exp2 (cddr x)))
+               (cond 
+                ((unary-connector-p op1)
+                 (and (null vacio)
+                      (wff-infix-p exp1)))
+                ((n-ary-connector-p op1)
+                 (null (rest x)))
+                ((binary-connector-p exp1)
+                 (and (wff-infix-p op1)
+                      (null (cdr list_exp2))
+                      (wff-infix-p (car list_exp2))))
+                ((n-ary-connector-p exp1)
+                 (and (wff-infix-p op1)
+                      (nop-verify exp1 (cdr x)))
+                 (t NIL))))))))
+
+;; Verifica si una expresion de la forma op <wff> ... op <wff>
+(defun nop-verify (op exp)
+  (or (null exp)
+      (and (equal op (car exp))
+           (wff-infix-p (cadr exp))
+           (nop-verify op (cddr exp)))))
 
 ;;
 ;; EJEMPLOS:
 ;;
-(wff-infix-p 'a) 						; T
+(wff-infix-p 'A) 						; T
 (wff-infix-p '(^)) 					; T  ;; por convencion
 (wff-infix-p '(v)) 					; T  ;; por convencion
 (wff-infix-p '(A ^ (v))) 			      ; T  
