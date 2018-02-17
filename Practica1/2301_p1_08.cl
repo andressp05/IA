@@ -489,7 +489,7 @@
       (negative-literal-p x)))
 
 ;; EJEMPLOS:
-(literal-p 'p a)             
+(literal-p 'p)             
 (literal-p '(¬ p))      
 ;;; evaluan a T
 (literal-p '(p))
@@ -559,7 +559,7 @@
                    (list_exp2 (cddr x)))
                (cond 
                 ((unary-connector-p op1)
-                 (and (null vacio)
+                 (and (null list_exp2)
                       (wff-infix-p exp1)))
                 ((n-ary-connector-p op1)
                  (null (rest x)))
@@ -569,8 +569,8 @@
                       (wff-infix-p (car list_exp2))))
                 ((n-ary-connector-p exp1)
                  (and (wff-infix-p op1)
-                      (nop-verify exp1 (cdr x)))
-                 (t NIL))))))))
+                      (nop-verify exp1 (cdr x))))
+                 (t NIL)))))))
 
 ;; Verifica si una expresion de la forma op <wff> ... op <wff>
 (defun nop-verify (op exp)
@@ -618,7 +618,7 @@
   (when (wff-prefix-p wff)
     (if (literal-p wff)
         wff
-      (let ((connector      (first wff))
+      (let ((connector (first wff))
             (elements-wff (rest wff)))
         (cond
          ((unary-connector-p connector) 
@@ -641,6 +641,7 @@
 ;;
 ;;  EJEMPLOS:
 ;;
+(prefix-to-infix nil) 
 (prefix-to-infix '(v))          ; (V)
 (prefix-to-infix '(^))          ; (^)
 (prefix-to-infix '(v a))        ; A
@@ -663,14 +664,38 @@
 ;; EVALUA A : FBF en formato prefijo 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun infix-to-prefix (wff)
-  ;;
-  ;; 4.1.5 Completa el codigo
-  ;;
-  )
+  (when (wff-infix-p wff)
+    (if (literal-p wff)
+        wff
+      (let ((op1 (first wff))
+            (rst_ele (rest wff))
+            (conector (first (rest wff))))
+        (cond
+         ((unary-connector-p op1)
+          (list op1 (infix-to-prefix (second wff))))
+         ((binary-connector-p conector)
+          (list conector (infix-to-prefix op1) (infix-to-prefix (third wff))))
+         ((n-ary-connector-p conector)
+          (cond
+           ((null rst_ele) wff)
+           ((null (cdr rst_ele))
+            (infix-to-prefix op1))
+           (t (cons conector (mapcar #'(lambda (x) (infix-to-prefix x)) (list-def wff conector) )))))
+         (t nil))))))
+          
+(defun list-def (wff conector)
+  (remove-if #'(lambda (x) (equal conector x)) wff))
+  
 
+(infix-to-prefix(list-def '( a v b v c v f) 'v)          
+(infix-to-prefix '(( a => b) v b v c))           
+           
+
+            
 ;;
 ;; EJEMPLOS
 ;;
+(literal-p 'a)
 (infix-to-prefix nil)      ;; NIL
 (infix-to-prefix 'a)       ;; a
 (infix-to-prefix '((a)))   ;; NIL
@@ -722,10 +747,14 @@
 ;; EVALUA A : T si FBF es una clausula, NIL en caso contrario. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun clause-p (wff)
-  ;;
-  ;; 4.1.6 Completa el codigo
-  ;;
-  )
+
+         
+(defun cond (lst)
+  (cond 
+   ((null lst) t)
+   (((not(equal (first lst) 'v))) nil)
+   ((t) (rest lst))))
+           
 
 ;;
 ;; EJEMPLOS:
