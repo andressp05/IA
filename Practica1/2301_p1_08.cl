@@ -823,18 +823,18 @@
 ;;            sin connector <=>
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun eliminate-biconditional (wff)
+(defun eliminate-biconditional (wff);; transforma la bicondicional a su forma equivalente con condicional
   (if (or (null wff) (literal-p wff)) ;; Si es nula o literal
       wff ;devuelve el literal
-    (let ((connector (first wff)))
+    (let ((connector (first wff))) ;; Llama connector al primer elemento de wff
       (if (eq connector +bicond+) ;; Si es efectivamente una bicondicional
-          (let ((wff1 (eliminate-biconditional (second wff)))  ;; elimina la flecha sentido fbf2 a fbf1
-                (wff2 (eliminate-biconditional (third  wff)))) ;; elimina la flecha sentido fbf1 a fbf2
-            (list +and+ ;;Creamos el and entre las dos wff resultantes segun la formula
-                  (list +cond+ wff1 wff2)
-                  (list +cond+ wff2 wff1)))
+          (let ((wff1 (eliminate-biconditional (second wff)))  ;; llama wff1 al elemento izquierdo de la bicondicion
+                (wff2 (eliminate-biconditional (third  wff)))) ;; llama wff1 al elemento derecho de la bicondicion
+            (list +and+ ;;Creamos el and externo entre las dos wff resultantes segun la formula
+                  (list +cond+ wff1 wff2) ;; Creamos la condicional de wff1 a wff2 interna segun la formula
+                  (list +cond+ wff2 wff1))) ;; Creamos la condicional de wff2 a wff1 interna segun la formula
         (cons connector ;; creamos los pares entre el conector y el mapcar correspondiente
-              (mapcar #'eliminate-biconditional (rest wff)))))))
+              (mapcar #'eliminate-biconditional (rest wff))))))) ;; llama recursivamente a la bicondicional con el resto de elementos
 
 ;;
 ;; EJEMPLOS:
@@ -854,18 +854,18 @@
 ;; EVALUA A : wff equivalente en formato prefijo 
 ;;            sin el connector =>
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun eliminate-conditional (wff)  
+(defun eliminate-conditional (wff)  ;; transforma la condicional a su forma equivalente segun la regla
   (if (or (null wff) (literal-p wff)) ;; Si es nula o literal
-      wff ;devuelve el literal
-    (let ((connector (first wff)))
+      wff ;; devuelve el literal
+    (let ((connector (first wff))) ;; Llama connector al primer elemento de wff
       (if (eq connector +cond+) ;; Si es efectivamente una condicional
-          (let ((wff1 (eliminate-conditional (second wff)))
-                (wff2 (eliminate-conditional (third  wff))))
-            (list +or+ ;;Creamos el or entre las dos wff resultantes segun la formula
-                  (list +not+ wff1)
-                  (list wff2)))
-        (cons connector
-              (mapcar #'eliminate-conditional (rest wff)))))))
+          (let ((wff1 (eliminate-conditional (second wff))) ;; llama wf1 al elemento izquierdo de la condicional
+                (wff2 (eliminate-conditional (third  wff)))) ;; llama wf1 al elemento derecho de la condicional
+            (list +or+ ;;Creamos el or externo entre las dos wff resultantes segun la formula
+                  (list +not+ wff1) ;;Negamos la wff1 interna segun la formula
+                  (list wff2))) ;;Dejamos la otra wff2 interna como lista
+        (cons connector ;;creamos los pares entre el conector y el mapcar correspondiente
+              (mapcar #'eliminate-conditional (rest wff))))))) ;; llama recursivamente a la condicional con el resto de elementos
 
 ;;
 ;; EJEMPLOS:
@@ -889,8 +889,7 @@
   (if
   	(or (null wff) (connector-p wff))
   	wff
-
-  )
+  	(de-morgan wff)))
 
 (defun exchange-and-or (connector)
   (cond
@@ -898,12 +897,59 @@
    ((eq connector +or+) +and+)
    (t connector)))
 
+(defun exchange-andor-not (connector);;
+  (if
+   (n-ary-connector-p connector)
+    +not+
+    connector))
+
+
+
+;;; PARECIDA A LAS DE ARRIBA, NO FUNCIONA
+(defun de-morgan (wff)
+	(if (or (null wff) (literal-p wff)) ;; Si es nula o literal
+      wff ;devuelve el literal
+	(let ((not-connector (first (second wff)))
+		  (unary-connector (first wff)))
+	(if 
+	  ;(let ((connector (first (second wff))))
+	  (and (unary-connector-p unary-connector) (n-ary-connector-p not-connector))
+	    (let ((wff1 (de-morgan (second wff)))
+	    	  (wff2 (de-morgan (third wff))))
+	    	(list (exchange-and-or unary-connector)
+	    		  (list +not+ wff1)
+	    		  (list wff2)))
+	  (cons (not-connector)
+	  		  (mapcar #'de-morgan (rest wff)))))))
+
+
+;;; FUNCIONA SOLO PARA EL PRIMER CASO
 (defun de-morgan (wff)
 	(if 
-	  (and (unary-connector-p (first wff)) (n-ary-connector-p (first (first (second wff)))))
-	    (list (exchange-and-or (first (first (second wff)))) (+not+ (rest (first (second wff)))))
-	    nil))
+	  ;(let ((connector (first (second wff))))
+	  (and (unary-connector-p (first wff)) (n-ary-connector-p (first (second wff))))
+	    ;;(list exchange-and-or (first (second wff))
+	    ;;	(list +not+ (de-morgan (rest (second wff)))))
+	    (cons (exchange-and-or (first (second wff)))
+	    	(mapcar #'(lambda (x) (put-nots (rest x))) (rest wff)))
+	    ;;(cons (exchange-and-or (first (second wff))) 
+;;DONTKNOW;;(list (exchange-andor-not (first (second wff))) (mapcar #'de-morgan (rest (second wff)))))
+;;APARTE HAY QUE LLAMAR POR CADA MAPCAR QUE HAGAMOS A REDUCE-NOT-NOT DE ESO
+	    wff))
 
+(defun put-nots (lst)
+	(combine-elem-lst +not+ lst))
+
+	    ;;(list exchange-and-or (first (second wff))
+	    ;;	(list +not+ (de-morgan (rest (second wff)))))
+	   ; (cons (exchange-and-or (first (second wff)))
+	    ;	(mapcar #'(lambda (x) (put-nots (de-morgan (rest x)))) (de-morgan (rest wff))))
+	    ;;(cons (exchange-and-or (first (second wff))) 
+;;DONTKNOW;;(list (exchange-andor-not (first (second wff))) (mapcar #'de-morgan (rest (second wff)))))
+;;APARTE HAY QUE LLAMAR POR CADA MAPCAR QUE HAGAMOS A REDUCE-NOT-NOT DE ESO
+	    ;wff))
+
+;;; CREO QUE HABRA QUE HACERLA RECURSIVA TAMBIEN AUNQUE FUNCIONA
 (defun reduce-not-not (wff)
   (if
   	(and (unary-connector-p (first wff)) (unary-connector-p (first (second wff)))) 
@@ -931,54 +977,54 @@
 ;; EVALUA A : FBF equivalente en formato prefijo FNC 
 ;;            con conectores ^, v
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun combine-elt-lst (elt lst)
-  (if (null lst)
-      (list (list elt))
-    (mapcar #'(lambda (x) (cons elt x)) lst)))
+(defun combine-elt-lst (elt lst);; le pasamos un elemento y una lista y los combina
+  (if (null lst);; si la lista es nula
+      (list (list elt));;  devuelve ((elt))
+    (mapcar #'(lambda (x) (cons elt x)) lst)));; si no, devuelve las combinaciones del elt con la lista
 
-(defun exchange-NF (nf)
-  (if (or (null nf) (literal-p nf)) 
-      nf
-    (let ((connector (first nf)))
-      (cons (exchange-and-or connector)
-            (mapcar #'(lambda (x)
-                          (cons connector x))
-                (exchange-NF-aux (rest nf)))))))
+(defun exchange-NF (nf);; dada una forma normal, la intercambia
+  (if (or (null nf) (literal-p nf)) ;; si la forma normal es nula o literal
+      nf ;;la devuelve tal cual
+    (let ((connector (first nf))) ;; llamamos conector al primer elemento de la forma normal
+      (cons (exchange-and-or connector) ;; hacemos una lista intercambiando el conector como primer elemento
+            (mapcar #'(lambda (x) ;; como segundo elemento, hacemos un mapcar
+                          (cons connector x)) ;; de la sublista formada por el conector y el resultado de
+                (exchange-NF-aux (rest nf)))))));;; llamar a intercambiar NF aux con toda la nf menos el conector primero
 
-(defun exchange-NF-aux (nf)
-  (if (null nf) 
-      NIL
-    (let ((lst (first nf)))
-      (mapcan #'(lambda (x) 
-                  (combine-elt-lst 
-                   x 
-                   (exchange-NF-aux (rest nf)))) 
-        (if (literal-p lst) (list lst) (rest lst))))))
+(defun exchange-NF-aux (nf) ;; dada una forma normal, 
+  (if (null nf) ;; si la nf es nula 
+      NIL ;; devuelve nil
+    (let ((lst (first nf))) ;; llamamos lst al primer elemento de la nf
+      (mapcan #'(lambda (x)  ;; realizamos un mapcar eliminando los nil
+                  (combine-elt-lst  
+                   x ;; combina el elt resultante del if de abajo
+                   (exchange-NF-aux (rest nf)))) ;; con el resto de la nf
+        (if (literal-p lst) (list lst) (rest lst))))));; si lst es un literal, lo hacemos lista y si no, pasamos el resto de la lst
 
-(defun simplify (connector lst-wffs )
-  (if (literal-p lst-wffs)
-      lst-wffs                    
-    (mapcan #'(lambda (x) 
+(defun simplify (connector lst-wffs );; simplifica un conector y unas listas de fbf prefijo
+  (if (literal-p lst-wffs);; si son un literal
+      lst-wffs;; devuelve la lista de fbf prefijo tal cual                    
+    (mapcan #'(lambda (x) ;;; hacemos un mapcar eliminando nils
                 (cond 
-                 ((literal-p x) (list x))
-                 ((equal connector (first x))
-                  (mapcan 
-                      #'(lambda (y) (simplify connector (list y))) 
+                 ((literal-p x) (list x)) ;;; si alguna sublista es literal, la hace lista y la devuelve
+                 ((equal connector (first x)) ;;; si el primer elemento de la sublista es el conector a simplificar
+                  (mapcan  ;;;hacemos un mapcar eliminando nils
+                      #'(lambda (y) (simplify connector (list y)))  ;;;llamamos recursivamente a simplificar con el resto de sublistas
                     (rest x))) 
-                 (t (list x))))               
+                 (t (list x)))) ;;; si no entra en ninguna de las dos condiciones anteriores, devuelve la sublista               
       lst-wffs)))
 
-(defun cnf (wff)
+(defun cnf (wff) ;; traduce una FBF prefijo en FNC apoyandose en las funciones auxiliares anteriores
   (cond
-   ((cnf-p wff) wff)
-   ((literal-p wff)
-    (list +and+ (list +or+ wff)))
-   ((let ((connector (first wff))) 
+   ((cnf-p wff) wff) ;;si la FBF está ya en FNC la devuelve
+   ((literal-p wff) ;; si la FBF es un literal
+    (list +and+ (list +or+ wff))) ;; devuelve (v (^ wff))
+   ((let ((connector (first wff))) ;; llamamos conector al primer elemento de la wff 
       (cond
-       ((equal +and+ connector) 
-        (cons +and+ (simplify +and+ (mapcar #'cnf (rest wff)))))
-       ((equal +or+ connector) 
-        (cnf (exchange-NF (cons +or+ (simplify +or+ (rest wff)))))))))))
+       ((equal +and+ connector)  ;; si el conector es un v 
+        (cons +and+ (simplify +and+ (mapcar #'cnf (rest wff))))) ;;devuelve una lista simplificada con ands 
+       ((equal +or+ connector) ;; si el conector es un ^
+        (cnf (exchange-NF (cons +or+ (simplify +or+ (rest wff))))))))))) ;;devuelve una lista simplificada con ors
 
 
 (cnf 'a)
@@ -1035,11 +1081,23 @@
 ;; EVALUA A : FBF en FNC (con conectores ^, v eliminaos)
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;Intento rapidisimo, JODIDO Error: Attempt to take the car of ^ which is not listp
+(defun is-atom (x)
+	(if (or (truth-value-p x) (connector-p x) (literal-p x)) 
+		T nil))
+
+(defun is-del (x)
+	(if (or (and (is-atom x) (n-ary-connector-p x)) (eq nil x))
+		T nil))
+
 (defun eliminate-connectors (cnf)
-  ;;
-  ;; 4.2.5 Completa el codigo
-  ;;
-  )
+  (if (or (null cnf) (and (is-atom cnf) (not (is-del cnf))))
+  	cnf
+  	(if (is-del cnf)
+  		(mapcar #'eliminate-connectors (rest cnf))
+  		(mapcar #'eliminate-connectors (first cnf)))))
+
 
 (eliminate-connectors 'nil)
 (eliminate-connectors (cnf '(^ (v p  (¬ q))  (v k  r  (^ m  n)))))
