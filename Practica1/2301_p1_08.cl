@@ -824,16 +824,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun eliminate-biconditional (wff)
-  (if (or (null wff) (literal-p wff))
-      wff
+  (if (or (null wff) (literal-p wff)) ;; Si es nula o literal
+      wff ;devuelve el literal
     (let ((connector (first wff)))
-      (if (eq connector +bicond+)
-          (let ((wff1 (eliminate-biconditional (second wff)))
-                (wff2 (eliminate-biconditional (third  wff))))
-            (list +and+ 
+      (if (eq connector +bicond+) ;; Si es efectivamente una bicondicional
+          (let ((wff1 (eliminate-biconditional (second wff)))  ;; elimina la flecha sentido fbf2 a fbf1
+                (wff2 (eliminate-biconditional (third  wff)))) ;; elimina la flecha sentido fbf1 a fbf2
+            (list +and+ ;;Creamos el and entre las dos wff resultantes segun la formula
                   (list +cond+ wff1 wff2)
                   (list +cond+ wff2 wff1)))
-        (cons connector 
+        (cons connector ;; creamos los pares entre el conector y el mapcar correspondiente
               (mapcar #'eliminate-biconditional (rest wff)))))))
 
 ;;
@@ -855,10 +855,17 @@
 ;;            sin el connector =>
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun eliminate-conditional (wff)  
-  ;;
-  ;; 4.2.2 Completa el codigo
-  ;;
-  )       
+  (if (or (null wff) (literal-p wff)) ;; Si es nula o literal
+      wff ;devuelve el literal
+    (let ((connector (first wff)))
+      (if (eq connector +cond+) ;; Si es efectivamente una condicional
+          (let ((wff1 (eliminate-conditional (second wff)))
+                (wff2 (eliminate-conditional (third  wff))))
+            (list +or+ ;;Creamos el or entre las dos wff resultantes segun la formula
+                  (list +not+ wff1)
+                  (list wff2)))
+        (cons connector
+              (mapcar #'eliminate-conditional (rest wff)))))))
 
 ;;
 ;; EJEMPLOS:
@@ -879,9 +886,10 @@
 ;;            negativos.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun reduce-scope-of-negation (wff)
-  ;;
-  ;; 4.2.3 Completa el codigo
-  ;;
+  (if
+  	(or (null wff) (connector-p wff))
+  	wff
+
   )
 
 (defun exchange-and-or (connector)
@@ -889,6 +897,18 @@
    ((eq connector +and+) +or+)    
    ((eq connector +or+) +and+)
    (t connector)))
+
+(defun de-morgan (wff)
+	(if 
+	  (and (unary-connector-p (first wff)) (n-ary-connector-p (first (first (second wff)))))
+	    (list (exchange-and-or (first (first (second wff)))) (+not+ (rest (first (second wff)))))
+	    nil))
+
+(defun reduce-not-not (wff)
+  (if
+  	(and (unary-connector-p (first wff)) (unary-connector-p (first (second wff)))) 
+  	  (rest (second wff))
+	  wff))
 
 ;;
 ;;  EJEMPLOS:
