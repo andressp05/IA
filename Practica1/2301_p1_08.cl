@@ -686,8 +686,7 @@
 (defun list-def (wff conector)
   (remove-if #'(lambda (x) (equal conector x)) wff))
   
-
-(infix-to-prefix(list-def '( a v b v c v f) 'v)          
+          
 (infix-to-prefix '(( a => b) v b v c))           
            
 
@@ -747,14 +746,18 @@
 ;; EVALUA A : T si FBF es una clausula, NIL en caso contrario. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun clause-p (wff)
+  (cond ((equal wff nil) nil)  
+        ((not (listp wff)) nil)
+        ((not (equal 'v (first wff))) nil)
+        ((equal nil (rest wff)) t)
+        ((equal nil (no-binary-operation (cadr wff))) nil)
+        (t (clause-p (cons 'v (cddr wff)))))) 
 
-         
-(defun cond (lst)
+(defun no-binary-operation (exp)
   (cond 
-   ((null lst) t)
-   (((not(equal (first lst) 'v))) nil)
-   ((t) (rest lst))))
-           
+   ((equal (literal-p exp) t))
+   (t (and (wff-prefix-p exp) (not (n-ary-connector-p (first exp)))))))
+      
 
 ;;
 ;; EJEMPLOS:
@@ -782,10 +785,12 @@
 ;;            NIL en caso contrario. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun cnf-p (wff)
-  ;;
-  ;; 4.1.7 Completa el codigo
-  ;;
-  )
+  (cond
+   ((equal wff nil) nil)
+   ((not (equal '^ (first wff))) nil)
+   ((equal (cadr wff) nil) t)
+   ((equal nil (clause-p (cadr wff))) nil)
+   (t (cnf-p (cons '^ (cddr wff))))))
 
 ;;
 ;; EJEMPLOS:
@@ -1153,10 +1158,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun eliminate-repeated-literals (k)
-  ;;
-  ;; 4.3.1 Completa el codigo
-  ;;
-  )
+  (print k)
+  (cond 
+   ((equal (first k) nil) nil)
+   ((equal (rest k) nil) t)
+   (t (append(remove (first k) () :test #'eql) (list(first k))))))
 
 ;;
 ;; EJEMPLO:
