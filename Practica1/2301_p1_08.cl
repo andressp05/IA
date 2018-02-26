@@ -1159,15 +1159,20 @@
 
 (defun eliminate-repeated-literals (k)
   (print k)
-  (cond 
-   ((equal (first k) nil) nil)
-   ((equal (rest k) nil) t)
-   (t (append(remove (first k) () :test #'eql) (list(first k))))))
+  (print (first k))
+  (let (exp (remove (first k) k :test #'equal))
+   (cond 
+    ((equal (rest k) nil) (last k))
+    (t (union 
+        (cons (first k) exp)
+        (eliminate-repeated-literals (rest k)))))))
 
 ;;
 ;; EJEMPLO:
 ;;
-(eliminate-repeated-literals '(a b (¬ c) (¬ a) a c (¬ c) c a))
+(eliminate-repeated-literals '(a b a a b))
+(eliminate-repeated-literals '(a (¬ c) (¬ c) b))
+(eliminate-repeated-literals '(a b c (¬ c) a c (¬ a) c a))
 ;;;   (B (¬ A) (¬ C) C A)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1177,17 +1182,35 @@
 ;; RECIBE   : cnf - FBF en FNC (lista de clausulas, conjuncion implicita)
 ;; EVALUA A : FNC equivalente sin clausulas repetidas 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun eliminate-repeated-clauses (cnf) 
-  ;;
-  ;; 4.3.2 Completa el codigo
-  ;;
-  )
+(defun eliminate-repeated-clauses (cnf)
+  (print cnf)
+  (cond 
+   ((equal cnf nil) nil)
+   ((equal (rest cnf) nil) (eliminate-repeated-literals (first cnf)))
+   (t )))
+
+
+(eliminate-repeated-clauses '( ( d (¬ c) c c d (¬ a) ) ))
+;;; ((C (¬ A)) (C (¬ A) B) (A B))
+(eliminate-repeated-clauses '(((¬ a) c c c) (c c (¬ a))))
+(eliminate-repeated-clauses '(((¬ a) c) (c (¬ a)) ((¬ a) (¬ a) b c b) (a a b) (c (¬ a) b  b) (a b)))
+;;; ((C (¬ A)) (C (¬ A) B) (A B))
+    
+    
+  
+(defun contenido (l1 l2)
+  (if (equal nil l1)
+      t
+    (and (not (equal nil (find (first l1) (eliminate-repeated-literals l2) :test #'equal)))
+         (contenido (rest l1) l2))))
+
+(defun our-equal (l1 l2)
+  (and (contenido l1 l2) (contenido l2 l1)))
 
 ;;
 ;; EJEMPLO:
 ;;
-(eliminate-repeated-clauses '(((¬ a) c) (c (¬ a)) ((¬ a) (¬ a) b c b) (a a b) (c (¬ a) b  b) (a b)))
-;;; ((C (¬ A)) (C (¬ A) B) (A B))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.3.3
@@ -1197,11 +1220,11 @@
 ;; EVALUA a : K1 si K1 subsume a K2
 ;;            NIL en caso contrario
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun subsume (K1 K2)
-  ;;
-  ;; 4.3.3 Completa el codigo
-  ;;
-  )
+  (if (equal t (contenido k1 k2))
+      k1
+    nil))
   
 ;;
 ;;  EJEMPLOS:
@@ -1212,7 +1235,7 @@
 ;; (NIL)
 (subsume '(a b (¬ c)) '(a) )
 ;; NIL
-(subsume '( b (¬ c)) '(a b (¬ c)) )
+(subsume '( b (¬ c)) '(a b (¬ c)))
 ;; ( b (¬ c))
 (subsume '(a b (¬ c)) '( b (¬ c)))
 ;; NIL
@@ -1231,10 +1254,9 @@
 ;; EVALUA A : FBF en FNC equivalente a cnf sin clausulas subsumidas 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun eliminate-subsumed-clauses (cnf) 
-  ;;
-  ;; 4.3.4 Completa el codigo
-  ;;
-)
+  (cond
+   ((equal nil cnf) nil)
+   
 
 ;;
 ;;  EJEMPLOS:
@@ -1257,15 +1279,31 @@
 ;; EVALUA a : T si K es tautologia
 ;;            NIL en caso contrario
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun tautology-p (K) 
-  ;;
-  ;; 4.3.5 Completa el codigo
-  ;;
-  )
+(defun tautology-p (k) 
+  (let ((op (first k)))
+    (cond 
+     ((equal k nil) nil)
+     ((and
+       (equal (positive-literal-p op) t)
+       (not (equal (find (cons '¬ (list (first k))) k :test #'equal) nil)))
+      nil)
+     ((and
+        (equal (negative-literal-p op) t)
+       (not (equal(find (second (first k)) k :test #'equal) nil)))
+      nil)
+     (t (and t (tautology-p (rest k)))))))
+
+    
+  
+(find (exp2 k :test #'equal))))))
+
+
+
 
 ;;
 ;;  EJEMPLOS:
 ;;
+(tautology-p '(B A))
 (tautology-p '((¬ B) A C (¬ A) D)) ;;; T 
 (tautology-p '((¬ B) A C D))       ;;; NIL
 
