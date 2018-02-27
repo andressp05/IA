@@ -347,9 +347,25 @@
 ;; EVALUA A : cnf_lambda^(0) subconjunto de clausulas de cnf  
 ;;            que no contienen el literal lambda ni ¬lambda   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun extract-neutral-clauses (lambda cnf) 
-  (set-difference cnf (list lambda) :test 'equal)
-  )
+
+;;; FUNCIONA PERFECTO, PREGUNTAR SI SE PUEDE CAMBIAR DE LAMBDA A LAMDA Y DE CNF A FNC, CAMBIAR EL ORDEN DEL CONS
+
+(defun extract-neutral-clauses (lamda cnf) 
+  (intersection (extract-no-positive-clauses lamda cnf) (extract-no-negative-clauses lamda cnf)))
+
+(defun extract-no-positive-clauses (lamda cnf) 
+  (if (or (null cnf) (literal-p cnf))
+  	NIL
+  	(if (equal (member lamda (first cnf) :test #'equal) NIL)
+  		(cons (first cnf) (extract-no-positive-clauses lamda (rest cnf)))
+  		(extract-no-positive-clauses lamda (rest cnf)))))
+
+(defun extract-no-negative-clauses (lamda cnf) 
+  (if (or (null cnf) (literal-p cnf))
+  	NIL
+  	(if (equal (member (list +not+ lamda) (first cnf) :test #'equal) NIL)
+  		(cons (first cnf) (extract-no-negative-clauses lamda (rest cnf)))
+  		(extract-no-negative-clauses lamda (rest cnf)))))
 
 ;;
 ;;  EJEMPLOS:
@@ -382,9 +398,13 @@
 ;; EVALUA A : cnf_lambda^(+) subconjunto de clausulas de cnf 
 ;;            que contienen el literal lambda  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun extract-positive-clauses (lambda cnf) 
-  (set-difference cnf (list lambda) :test 'equal)
-  )
+(defun extract-positive-clauses (lamda cnf) 
+  (if (or (null cnf) (literal-p cnf))
+  	NIL
+  	(if (equal (member lamda (first cnf) :test #'equal) NIL)
+  		(extract-positive-clauses lamda (rest cnf))
+  		(cons (first cnf) (extract-positive-clauses lamda (rest cnf))))))
+
 
 ;;
 ;;  EJEMPLOS:
@@ -415,11 +435,12 @@
 ;; EVALUA A : cnf_lambda^(-) subconjunto de clausulas de cnf  
 ;;            que contienen el literal ¬lambda  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun extract-negative-clauses (lambda cnf) 
-  ;;
-  ;; 4.4.3 Completa el codigo
-  ;;
-  )
+(defun extract-negative-clauses (lamda cnf) 
+  (if (or (null cnf) (literal-p cnf))
+  	NIL
+  	(if (equal (member (list +not+ lamda) (first cnf) :test #'equal) NIL)
+  		(extract-negative-clauses lamda (rest cnf))
+  		(cons (first cnf) (extract-negative-clauses lamda (rest cnf))))))
 
 ;;
 ;;  EJEMPLOS:
@@ -451,12 +472,18 @@
 ;;                          sobre K1 y K2, con los literales repetidos 
 ;;                          eliminados
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun resolve-on (lambda K1 K2) 
-  ;;
-  ;; 4.4.4 Completa el codigo
-  ;;
-  )
+;; En k1 esta el lamda y en k2 el no lamda o viceversa
+;; SI pasa devuelves union k1 menos landa y k2 menos no lamda y elimina repitidos
 
+(defun resolve-on (lamda K1 K2)
+	(if (or (K1 NULL) (K2 NULL))
+		NIL
+		(cond 
+			((and (member lamda K1 :test #'equal) (member (list +not+ lamda) K2)) 
+				(eliminate-repeated-literals (union (remove lamda K1) (remove (list +not+ lamda) K2))))
+			((and (member (list +not+ lamda) K1 :test #'equal) (member lamda K2 :test #'equal))
+				(eliminate-repeated-literals (union (remove (list +not+ lamda) K1) (remove lamda K2))))
+			((t) nil))))
 ;;
 ;;  EJEMPLOS:
 ;;
@@ -491,11 +518,8 @@
 ;;            
 ;; EVALUA A : RES_lambda(cnf) con las clauses repetidas eliminadas
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun build-RES (lambda cnf)
-  ;;
-  ;; 4.4.5 Completa el codigo
-  ;;
-)
+(defun build-RES (lamda cnf)
+  (union (extract-neutral-clauses lamda cnf) (resolve-on lamda (extract-positive-clauses lamda cnf) (extract-negative-clauses lamda cnf))))
 
 ;;
 ;;  EJEMPLOS:
