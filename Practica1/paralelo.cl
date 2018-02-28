@@ -528,18 +528,20 @@
   (union (extract-neutral-clauses lamda cnf) 
   	(mapcan #'resolve-on lamda (extract-positive-clauses lamda cnf) (extract-negative-clauses lamda cnf))))
 
-(defun create-clause (cnf)
-	(mapcan #'(lambda (x) (adjoin '() x)) cnf))
-
-(defun eliminate-nils (cnf)
-	(mapcan #'(lambda (x) (if (null x) nil (list x))) cnf))
-
-(defun eliminate-reps (cnf)
-	)
-
 ;;PRIMERA VERSION
 (defun build-RES (lamda cnf)
   (union (extract-neutral-clauses lamda cnf) (resolve-on lamda (extract-positive-clauses lamda cnf) (extract-negative-clauses lamda cnf))))
+
+(defun resolve-on-one-clause (lamda cnf)
+	)
+;;;auxiliar recibe lamda clausula y cnf y luego mapcan #'(lamda(x) resolve-on lamda clausula x) cnf)) x distinta de lambda si no nil
+;;;union extract-neutral y mapcan 
+
+(defun aux (lamda clause cnf)
+	(mapcan #'(lambda(x) (if (not(equal x lamda)) (resolve-on lamda clause x) nil)) cnf))
+
+(defun build-RES (lamda cnf)
+	(union (extract-neutral-clauses lamda cnf) (mapcan #'(lambda (x) (aux lamda x cnf)) (eliminate-repeated-clauses cnf))))
 
 ;;
 ;;  EJEMPLOS:
@@ -571,8 +573,14 @@
 ;;                NIL  si cnf es UNSAT
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun  RES-SAT-p (cnf) 
-  
+	(cond
+		((equal nil cnf) t)
+		((equal '(nil) cnf) nil)
+		((build-RES ))
+		)  
   )
+
+()
 
 ;;
 ;;  EJEMPLOS:
