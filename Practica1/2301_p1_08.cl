@@ -746,7 +746,7 @@
 ;; EVALUA A : T si FBF es una clausula, NIL en caso contrario. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun clause-p (wff)
-  (cond ((equal wff nil) nil)  
+  (cond ((null wff) nil)  
         ((not (listp wff)) nil)
         ((not (equal 'v (first wff))) nil)
         ((equal nil (rest wff)) t)
@@ -757,7 +757,8 @@
   (cond 
    ((equal (literal-p exp) t))
    (t (and (wff-prefix-p exp) (not (n-ary-connector-p (first exp)))))))
-      
+
+(clause-p 'a)
 
 ;;
 ;; EJEMPLOS:
@@ -787,10 +788,12 @@
 (defun cnf-p (wff)
   (cond
    ((equal wff nil) nil)
+   ((not (listp wff)) nil)
    ((not (equal '^ (first wff))) nil)
    ((equal (cadr wff) nil) t)
    ((equal nil (clause-p (cadr wff))) nil)
    (t (cnf-p (cons '^ (cddr wff))))))
+
 
 ;;
 ;; EJEMPLOS:
@@ -1039,11 +1042,11 @@
        ((equal +or+ connector) ;; si el conector es un ^
         (cnf (exchange-NF (cons +or+ (simplify +or+ (rest wff))))))))))) ;;devuelve una lista simplificada con ors
 
-
+(cnf-p 'a)
 (cnf 'a)
 
 (cnf '(v (¬ a) b c))
-(print (cnf '(^ (v (¬ a) b c) (¬ e) (^ e f (¬ g) h) (v m n) (^ r s q) (v u q) (^ x y))))
+(print (cnf '(^ (v (� a) b c) (� e) (^ e f (� g) h) (v m n) (^ r s q) (v u q) (^ x y))))
 (print (cnf '(v (^ (¬ a) b c) (¬ e) (^ e f (¬ g) h) (v m n) (^ r s q) (v u q) (^ x y))))
 (print (cnf '(^ (v p  (¬ q)) a (v k  r  (^ m  n)))))
 (print (cnf '(v p  q  (^ r  m)  (^ n  a)  s )))
@@ -1062,10 +1065,10 @@
 ;;
 (cnf NIL)              ; NIL
 (cnf 'a)               ; (^ (V A))
-(cnf '(¬ a))           ; (^ (V (¬ A)))
-(cnf '(V (¬ P) (¬ P))) ; (^ (V (¬ P) (¬ P)))
+(cnf '(� a))           ; (^ (V (¬ A)))
+(cnf '(V (� P) (� P))) ; (^ (V (¬ P) (¬ P)))
 (cnf '(V A))           ; (^ (V A))
-(cnf '(^ (v p (¬ q)) (v k r (^ m  n))))
+(cnf '(^ (v p (� q)) (v k r (^ m  n))))
 ;;;   (^ (V P (¬ Q)) (V K R M) (V K R N))
 (print  (cnf '(v (v p q) e f (^ r  m) n (^ a (¬ b) c) (^ d s))))
 ;;; (^ (V P Q E F R N A D)      (V P Q E F R N A S)
