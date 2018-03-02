@@ -1173,7 +1173,7 @@
 ;;
 ;; EJEMPLO:
 ;;
-(trace eliminate-repeated-literals)
+(untrace eliminate-repeated-literals)
 (eliminate-repeated-literals '(a b))
 (eliminate-repeated-literals '(a (¬ c) (¬ c) b))
 (eliminate-repeated-literals '(a b c (¬ a) a c (¬ c) c a))
@@ -1224,7 +1224,7 @@
 
 (defun subsume (K1 K2)
   (if (equal t (contenido k1 k2))
-      k1
+      (list k1)
     nil))
   
 ;;
@@ -1254,11 +1254,28 @@
 ;; RECIBE   : K (clausula), cnf (FBF en FNC)
 ;; EVALUA A : FBF en FNC equivalente a cnf sin clausulas subsumidas 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun eliminate-subsumed-clauses (cnf) 
-  (cond
-   ((equal nil cnf) nil)
-   
 
+(defun eliminate-subsumed-clauses (cnf)
+  (remove-subsumed cnf cnf))
+
+(defun is-subsumed (k l)
+  (unless (null l)
+    (or (and (not(null (subsume (car l) k)))
+             (not (eq k (car l))))
+        (is-subsumed k (rest l)))))
+    
+
+
+(is-subsumed '(a b c) '( (a b) (c d)))
+(is-subsumed '(a b c) '((a b c) '(a b c)))
+  
+(defun remove-subsumed (l1 final)
+  (cond
+   ((null l1) nil)
+   ((is-subsumed (first l1) final) (remove-subsumed (rest l1) final))
+   (t (cons (first l1) (remove-subsumed (rest l1) final )))))
+
+ 
 ;;
 ;;  EJEMPLOS:
 ;;
@@ -1284,22 +1301,25 @@
   (let ((op (first k)))
     (cond 
      ((equal k nil) nil)
-     ((and
-       (equal (positive-literal-p op) t)
-       (not (equal (find (cons '¬ (list (first k))) k :test #'equal) nil)))
-      nil)
-     ((and
-        (equal (negative-literal-p op) t)
-       (not (equal(find (second (first k)) k :test #'equal) nil)))
-      nil)
-     (t (and t (tautology-p (rest k)))))))
+     ((equal (positive-literal-p op) t) (or (tautology-p (rest k)) (en-tauto op k)))
+     ((equal (negative-literal-p op) t) (or (tautology-p (rest k)) (en-tauto op k))))))
 
+(defun equal-inv (a b)
+  (cond
+   ((and (positive-literal-p a) (negative-literal-p b))
+    (equal (second b) a))
+  ((and (negative-literal-p a) (positive-literal-p b))
+    (equal (second a) b))
+   (t nil)))
     
-  
-(find (exp2 k :test #'equal))))))
+(equal-inv 'a '(¬ a))
 
+(defun en-tauto (a k)
+  (if (equal (find a k :test #'equal-inv) nil)
+      nil
+    t))
 
-
+(en-tauto 'b '(a a b (¬ b) c))
 
 ;;
 ;;  EJEMPLOS:
@@ -1316,10 +1336,10 @@
 ;; EVALUA A : FBF en FNC equivalente a cnf sin tautologias 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun eliminate-tautologies (cnf) 
-  ;;
-  ;; 4.3.6 Completa el codigo
-  ;;
-  )
+  (cond
+   ((null cnf) nil)
+   ((tautology-p (first cnf)) (eliminate-tautologies (rest cnf)))
+   (t (cons (first cnf) (eliminate-tautologies(rest cnf))))))
 
 ;;
 ;;  EJEMPLOS:
@@ -1345,10 +1365,7 @@
 ;;            y sin clausulas subsumidas
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun simplify-cnf (cnf) 
-  ;;
-  ;; 4.3.7 Completa el codigo
-  ;;
-  )
+   (eliminate-subsumed-clauses(eliminate-tautologies(eliminate-repeated-clauses cnf))))
 
 ;;
 ;;  EJEMPLOS:
