@@ -49,7 +49,7 @@
                 (wff2 (eliminate-conditional (third  wff)))) ;; llama wf2 al elemento derecho de la condicional
             (list +or+ ;;Creamos el or externo entre las dos wff resultantes segun la formula
                   (list +not+ wff1) ;;Negamos la wff1 interna segun la formula
-                  (list wff2))) ;;Dejamos la otra wff2 interna como lista
+                  wff2)) ;;Dejamos la otra wff2 interna como lista
         (cons connector ;;creamos los pares entre el conector y el mapcar correspondiente
               (mapcar #'eliminate-conditional (rest wff))))))) ;; llama recursivamente a la condicional con el resto de elementos
 
@@ -82,73 +82,6 @@
    ((eq connector +and+) +or+)    
    ((eq connector +or+) +and+)
    (t connector)))
-
-(defun exchange-andor-not (connector);;
-  (if
-   (n-ary-connector-p connector)
-    +not+
-    connector))
-
-
-
-;;; PARECIDA A LAS DE ARRIBA, NO FUNCIONA
-(defun de-morgan (wff)
-	(if (or (null wff) (literal-p wff)) ;; Si es nula o literal
-      wff ;devuelve el literal
-	(let ((not-connector (first (second wff)))
-		  (unary-connector (first wff)))
-	(if 
-	  ;(let ((connector (first (second wff))))
-	  (and (unary-connector-p unary-connector) (n-ary-connector-p not-connector))
-	    (let ((wff1 (de-morgan (second wff)))
-	    	  (wff2 (de-morgan (third wff))))
-	    	(list (exchange-and-or unary-connector)
-	    		  (list +not+ wff1)
-	    		  (list wff2)))
-	  (cons (not-connector)
-	  		  (mapcar #'de-morgan (rest wff)))))))
-
-
-;;; FUNCIONA SOLO PARA EL PRIMER CASO
-(defun de-morgan (wff)
-	(if 
-	  ;(let ((connector (first (second wff))))
-	  (and (unary-connector-p (first wff)) (n-ary-connector-p (first (second wff))))
-	    ;;(list exchange-and-or (first (second wff))
-	    ;;	(list +not+ (de-morgan (rest (second wff)))))
-	    (cons (exchange-and-or (first (second wff)))
-	    	(mapcar #'(lambda (x) (put-nots (rest x))) (rest wff)))
-	    ;;(cons (exchange-and-or (first (second wff))) 
-;;DONTKNOW;;(list (exchange-andor-not (first (second wff))) (mapcar #'de-morgan (rest (second wff)))))
-;;APARTE HAY QUE LLAMAR POR CADA MAPCAR QUE HAGAMOS A REDUCE-NOT-NOT DE ESO
-	    wff))
-
-(defun put-nots (lst)
-	(combine-elem-lst +not+ lst))
-
-	    ;;(list exchange-and-or (first (second wff))
-	    ;;	(list +not+ (de-morgan (rest (second wff)))))
-	   ; (cons (exchange-and-or (first (second wff)))
-	    ;	(mapcar #'(lambda (x) (put-nots (de-morgan (rest x)))) (de-morgan (rest wff))))
-	    ;;(cons (exchange-and-or (first (second wff))) 
-;;DONTKNOW;;(list (exchange-andor-not (first (second wff))) (mapcar #'de-morgan (rest (second wff)))))
-;;APARTE HAY QUE LLAMAR POR CADA MAPCAR QUE HAGAMOS A REDUCE-NOT-NOT DE ESO
-	    ;wff))
-
-;;; CREO QUE HABRA QUE HACERLA RECURSIVA TAMBIEN AUNQUE FUNCIONA
-(defun reduce-not-not (wff)
-  (if
-  	(and (unary-connector-p (first wff)) (unary-connector-p (first (second wff)))) 
-  	  (rest (second wff))
-	  wff))
-
-(defun reduce-not-not (wff)
-	(if
-		(unary-connector-p (first wff))
-		  (if unary-connector-p (first (second wff))
-		  	(rest (second wff))
-		  	(reduce-not-not ()))
-		  wff))
 
 ;;; A LO RODRI
 (defun reduce-scope-of-negation (wff)
@@ -290,10 +223,10 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+
 (defun eliminate-connectors (cnf)
-	(list (mapcan #'(lambda (x) (cond ((n-ary-connector-p x) nil)
-								((literal-p x) (list x))
-								((eliminate-connectors x)))) cnf)))
+	(mapcar #'rest (rest cnf)))
 
 (eliminate-connectors 'nil)
 (eliminate-connectors (cnf '(^ (v p  (¬ q))  (v k  r  (^ m  n)))))
@@ -385,7 +318,7 @@
 ;; (NIL)
 
 (extract-neutral-clauses 'r
-                           '((p (Â¬ q) r) (p q) (r (Â¬ s) q) (a b p) (a (Â¬ p) c) ((Â¬ r) s)))
+                           '((p (¬ q) r) (p q) (r (¬ s) q) (a b p) (a (¬ p) c) ((¬ r) s)))
 ;; ((P Q) (A B P) (A (Â¬ P) C))
 
 (extract-neutral-clauses 'p
@@ -426,7 +359,7 @@
                              '((p (¬ q) r) (p q) (r (¬ s) q) (a b p) (a (¬ p) c) ((¬ r) s)))
 ;; ((P (Â¬ Q) R) (R (Â¬ S) Q))
 (extract-positive-clauses 'p
-                             '(((Â¬ p) (Â¬ q) r) ((Â¬ p) q) (r (Â¬ s) (Â¬ p) q) (a b (Â¬ p)) ((Â¬ r) (Â¬ p) s)))
+                             '(((¬ p) (¬ q) r) ((¬ p) q) (r (¬ s) (¬ p) q) (a b (¬ p)) ((¬ r) (¬ p) s)))
 ;; NIL
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -449,7 +382,7 @@
 ;;  EJEMPLOS:
 ;;
 (extract-negative-clauses 'p
-                             '((p (Â¬ q) r) (p q) (r (Â¬ s) q) (a b p) (a (Â¬ p) c) ((Â¬ r) s)))
+                             '((p (¬ q) r) (p q) (r (¬ s) q) (a b p) (a (¬ p) c) ((¬ r) s)))
 ;; ((A (Â¬ P) C))
 
 (extract-negative-clauses 'r NIL)
@@ -576,15 +509,29 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun  RES-SAT-p (cnf) 
 	(cond
-		((equal nil cnf) t)
+		((null cnf) t)
 		((equal '(nil) cnf) nil)
 		((member NIL cnf) t)
-		(t )
+		((t) (RES-SAT-p-rec (extract-positive-literals cnf) cnf))
 		)  
   )
 
+(defun RES-SAT-p-rec (lamdas cnf)
+	(cond
+		((or (null cnf) (null lamdas)) t)
+		((equal '(nil) cnf) nil)
+		((t) 
+			(let ((newlamda (first lamdas)))
+				(newalpha (simplify (build-RES newlamda cnf))))
+			RES-SAT-p-rec ((rest lamdas) newalpha))))
+
 (defun extract-positive-literals (cnf)
-	)
+	(if (null cnf)
+		NIL
+		(eliminate-repeated-literals (remove nil (mapcan #'(lambda (x) 
+			(mapcar #'(lambda (y) 
+				(if (equal (positive-literal-p y) t)
+					y nil)) x))cnf)))))
 
 ;;
 ;;  EJEMPLOS:
