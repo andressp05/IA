@@ -326,9 +326,11 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun wff-infix-to-cnf (wff)
-  (eliminate-connectors  
-    (cnf
-      (infix-to-prefix wff))))
+  (if (or (null wff) (literal-p wff))
+		wff
+		(eliminate-connectors  
+			(cnf
+				(infix-to-prefix wff)))))
 
 ;;
 ;; EJEMPLOS:
@@ -576,11 +578,13 @@
 	(cond
 		((equal nil cnf) t)
 		((equal '(nil) cnf) nil)
-		((build-RES ))
+		((member NIL cnf) t)
+		(t )
 		)  
   )
 
-()
+(defun extract-positive-literals (cnf)
+	)
 
 ;;
 ;;  EJEMPLOS:
