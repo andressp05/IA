@@ -498,6 +498,7 @@
 	(cond
 		((null cnf) t)
 		((equal '(nil) cnf) nil)
+    ((member nil cnf) nil)
 		(t (RES-SAT-p-rec (extract-positive-literals cnf) cnf))
 		)  
   )
@@ -506,6 +507,7 @@
 	(cond
 		((or (null cnf) (null lamdas)) t)
 		((equal '(nil) cnf) nil)
+    ((member nil cnf) nil)
 		(t 
 			(let* ((newlamda (first lamdas))
 				(newalpha (simplify-cnf (build-RES newlamda cnf))))
@@ -551,9 +553,16 @@
 ;;            NIL en caso de que no sea consecuencia logica.  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun logical-consequence-RES-SAT-p (wff w)
-  (if (equal (RES-SAT-p (union (wff-infix-to-cnf wff) (wff-infix-to-cnf (list +not+ w)))) t)
-  	NIL t
-  ))
+  (if (or (null wff) (null wff)) 
+    nil
+    (if (equal (RES-SAT-p (union (wff-infix-to-cnf wff) (wff-infix-to-cnf (notw w)))) t)
+      NIL t
+  )))
+
+(defun notw (w)
+  (if (negative-literal-p w)
+    (second w)
+    (list +not+ w)))
 
 ;;
 ;;  EJEMPLOS:
