@@ -1525,7 +1525,8 @@
 
 (defun RES-SAT-p-rec (lamdas cnf)
   (cond
-    ((or (null cnf) (null lamdas)) t)
+   ((and (null cnf) (null lamdas)) nil)
+   ((or (null cnf) (null lamdas)) t)
     ((equal '(nil) cnf) nil)
     ((member nil cnf) nil)
     (t 
@@ -1539,7 +1540,9 @@
     (eliminate-repeated-literals (remove nil (mapcan #'(lambda (x) 
       (mapcar #'(lambda (y) 
         (if (equal (positive-literal-p y) t)
-          y nil)) x))cnf)))))
+            y nil)) x))cnf)))))
+
+(build-RES 'R '((R)))
 
 ;;
 ;;  EJEMPLOS:
@@ -1560,7 +1563,7 @@
 (RES-SAT-p '((P (~ Q)) NIL (K R))) ;;; NIL
 (RES-SAT-p '(nil))         ;;; NIL
 (RES-SAT-p '((S) nil))     ;;; NIL 
-(RES-SAT-p '((p) ((~ p)))) ;;; NIL
+(RES-SAT-p '((p) (~ p))) ;;; NIL
 (RES-SAT-p
  '(((~ p) (~ q) (~ r)) (q r) ((~ q) p) (p) (q) ((~ r)) ((~ p) (~ q) r))) ;;; NIL
 
@@ -1576,8 +1579,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun logical-consequence-RES-SAT-p (wff w)
   (if (or (null wff) (null wff)) 
-    nil
-    (if (equal (RES-SAT-p (union (wff-infix-to-cnf wff) (wff-infix-to-cnf (notw w)))) t)
+      nil
+    (if (equal (RES-SAT-p (union (wff-infix-to-cnf wff) (list (wff-infix-to-cnf (notw w))))) t)
       NIL t
   )))
 
@@ -1656,9 +1659,9 @@
 ;; EJERCICIO 5.3:
 ;; Algoritmo BFS (Breadth-first-search) en grafos
 ;;
-;; RECIBE   : end - F 
-;;            queue   - F 
-;;            net - F
+;; RECIBE   : end El nodo meta
+;;            queue  cola de nodos encontrados pero no visitados
+;;            net el grafo (inicialmente con el nodo raíz y sus hijos
 ;;                   
 ;; EVALUA A : T   si w es consecuencia logica de wff
 ;;            NIL en caso de que no sea consecuencia logica.  
@@ -1668,20 +1671,23 @@
 ;;; Breadth-first-search in graphs
 ;;;
 (defun bfs (end queue net)
-	(if (null queue) ’()
-		(let* ((path (first queue))
-			(node (first path)))
-		(if (eql node end)
-			(reverse path)
-		  (bfs end
-		  	(append (rest queue)
-		  		(new-paths path node net))
-		  	net)))))
+  (if (null queue) ’()                                       ;; Si la cola de nodos a explorar está vacía termina el algoritmo (devolvemos lista vacía)
+   (let* ((path (first queue))                               ;; path es el nodo y sus vecinos del grafo a explorar en el siguiente paso del algoritmo
+          (node (first path)))                               ;; node hace refencia al nodo a explorar
+     (if (eql node end)                                      ;; Si el nodo es igual a la meta hemos terminado
+         (reverse path)                                      ;; Si no llamamos recursivamente al algoritmo con la misma meta (no cambia), el resto de la cola de nodos
+       (bfs end                                              ;; encontrados pero no explorados (ya que el primero de esta acaba de ser explorado) y metemos en la lista
+            (append (rest queue)                             ;; lo devuelto pr la funcion auxiliar. También le pasamos el grafo que no varía
+                    (new-paths path node net))
+            net)))))
 
-(defun new-paths (path node net)
-	(mapcar #’(lambda(n)
-		(cons n path))
-	  (rest (assoc node net))))
+(defun new-paths (path node net)                             ;; Funcion que devuelve el nodo hijo a explorar en la iteracion n del algoritmo junto con el camino para
+  (mapcar #'(lambda(n)                                       ;; que se ha seguido para llegar hasta el.
+              (cons n path))
+    (rest (assoc node net))))
+
+
+
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1701,7 +1707,7 @@
 ;;; Breadth-first-search in graphs
 ;;;
 (defun bfs (end queue net)
-	(if (null queue) ’()
+	(if (null queue) '()
 		(let* ((path (first queue))
 			(node (first path)))
 		(if (eql node end)
@@ -1712,8 +1718,71 @@
 		  	net)))))
 
 (defun new-paths (path node net)
-	(mapcar #’(lambda(n)
+	(mapcar #'(lambda(n)
 		(cons n path))
-	  (rest (assoc node net))))
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   (rest (assoc node net))))
+
+(defun shortest-path (start end net) (bfs end (list (list start)) net))
+
+
+(new-paths '(a d) 'a '((a d) (b d f) (c e) (d f) (e b f) (f)))
+(bfs 'f '((c)) '((a d) (b d f) (c e) (d f) (e b f) (f)))
+
+ ;;Encuentra el camino más corto, ya que vamos apliando el camino desde el nodo inicial en
+(shortest-path 'c 'f '((a d) (b d f) (c e) (d f) (e b f) (f)))          ;; todas las direcciones hasta encontrar por primera vez el nodo final
+
+
+
+
+(shortest-path 'a 'f '((a d) (b d f) (c e) (d f) (e b f) (f)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; 0[5]: (SHORTEST-PATH A F ((A D) (B D F) (C E) (D F) (E B F) (F)))
+;;  1[5]: (BFS F ((A)) ((A D) (B D F) (C E) (D F) (E B F) (F)))
+;;   2[5]: (BFS F ((D A)) ((A D) (B D F) (C E) (D F) (E B F) (F)))
+;;    3[5]: (BFS F ((F D A)) ((A D) (B D F) (C E) (D F) (E B F) (F)))
+;;    3[5]: returned (A D F)
+;;   2[5]: returned (A D F)
+;;  1[5]: returned (A D F)
+;; 0[5]: returned (A D F)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(shortest-path 'f 'c '((a c d e) (b d e f) (c a g) (d a b h g) (e a b h g) (f b h) (g c d e h) (h d e f g))) ;; Camino mas corto
+;; f b a c tambien (depende de como se describa el grafo)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; EJERCICIO 5.8:
+;; Algoritmo BFS-improved
+;;
+;; RECIBE   : end 
+;;            queue   - F 
+;;            net - F
+;;                   
+;; El problema es que se vuelven a explorar nodos ya explorados
+;; Sol: eliminación de los estados repetidos
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(shortest-path 'a 'd '((a b) (b c) (c a) (d))) ;; No tiene solución, ya que hay un recursión infinita por culpa de un lazo
+
+
+(defun nodo-in-path (n l)
+  (if (equal (member n l :test #'equal) nil)
+      nil
+    t))
+
+(nodo-in-path 'e '( h b c d e))
+
+
+(defun bfs-improved (end queue net)
+  (if (null queue) '()
+    (let* ((path (first queue))
+           (node (first path)))
+      (if (eql node end)                                        ;; La diferencia es que comprueba si el nod ya se encuentra en la lista de nodos explorados.        
+          (reverse path)                                        ;; Si está solo hacemos que se devuelva el resto de la lista, no aportando ningún camino nuevo
+        (if (nodo-in-path node path)
+            (bfs-improved end (rest queue) net)                 ;; Si no está hacemos lo que se hacía enla primera versión
+          (bfs-improved end (append (rest queue) (new-paths path node net)) net))))))
+
+
+(defun shortest-path-improved (end queue net)    ;; Funcion que llama bfs-improves para encontrar el camino mas corto sin estado repetidos entre a y b en un grafo
+  (bfs end queue net))
+               
