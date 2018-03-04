@@ -820,7 +820,7 @@
 (cnf-p '(¬ (v p q)))                                ; NIL
 (cnf-p '(v p q (r) s))                              ; NIL 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.2.1: Incluya comentarios en el codigo adjunto
 ;;
 ;; Dada una FBF, evalua a una FBF equivalente 
@@ -849,9 +849,9 @@
 ;;
 (eliminate-biconditional '(<=> p  (v q s p) ))
 ;;   (^ (=> P (v Q S P)) (=> (v Q S P) P))
-(eliminate-biconditional '(<=>  (<=> p  q) (^ s (Â¬ q))))
-;;   (^ (=> (^ (=> P Q) (=> Q P)) (^ S (Â¬ Q)))
-;;      (=> (^ S (Â¬ Q)) (^ (=> P Q) (=> Q P))))
+(eliminate-biconditional '(<=>  (<=> p  q) (^ s (¬ q))))
+;;   (^ (=> (^ (=> P Q) (=> Q P)) (^ S (¬ Q)))
+;;      (=> (^ S (¬ Q)) (^ (=> P Q) (=> Q P))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.2.2
@@ -871,16 +871,16 @@
                 (wff2 (eliminate-conditional (third  wff)))) ;; llama wf2 al elemento derecho de la condicional
             (list +or+ ;;Creamos el or externo entre las dos wff resultantes segun la formula
                   (list +not+ wff1) ;;Negamos la wff1 interna segun la formula
-                  (list wff2))) ;;Dejamos la otra wff2 interna como lista
+                  wff2)) ;;Dejamos la otra wff2 interna como lista
         (cons connector ;;creamos los pares entre el conector y el mapcar correspondiente
               (mapcar #'eliminate-conditional (rest wff))))))) ;; llama recursivamente a la condicional con el resto de elementos
 
 ;;
 ;; EJEMPLOS:
 ;;
-(eliminate-conditional '(=> p q))                      ;;; (V (Â¬ P) Q)
-(eliminate-conditional '(=> p (v q s p)))              ;;; (V (Â¬ P) (V Q S P))
-(eliminate-conditional '(=> (=> (Â¬ p) q) (^ s (Â¬ q)))) ;;; (V (Â¬ (V (Â¬ (Â¬ P)) Q)) (^ S (Â¬ Q)))
+(eliminate-conditional '(=> p q))                      ;;; (V (¬ P) Q)
+(eliminate-conditional '(=> p (v q s p)))              ;;; (V (¬ P) (V Q S P))
+(eliminate-conditional '(=> (=> (¬ p) q) (^ s (¬ q)))) ;;; (V (¬ (V (¬ (¬ P)) Q)) (^ S (¬ Q)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.2.3
@@ -895,9 +895,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun reduce-scope-of-negation (wff)
   (if
-  	(or (null wff) (connector-p wff))
-  	wff
-  	(de-morgan wff)))
+    (or (null wff) (connector-p wff))
+    wff
+    (de-morgan wff)))
 
 (defun exchange-and-or (connector)
   (cond
@@ -905,80 +905,27 @@
    ((eq connector +or+) +and+)
    (t connector)))
 
-(defun exchange-andor-not (connector);;
-  (if
-   (n-ary-connector-p connector)
-    +not+
-    connector))
-
-
-
-;;; PARECIDA A LAS DE ARRIBA, NO FUNCIONA
-(defun de-morgan (wff)
-	(if (or (null wff) (literal-p wff)) ;; Si es nula o literal
-      wff ;devuelve el literal
-	(let ((not-connector (first (second wff)))
-		  (unary-connector (first wff)))
-	(if 
-	  ;(let ((connector (first (second wff))))
-	  (and (unary-connector-p unary-connector) (n-ary-connector-p not-connector))
-	    (let ((wff1 (de-morgan (second wff)))
-	    	  (wff2 (de-morgan (third wff))))
-	    	(list (exchange-and-or unary-connector)
-	    		  (list +not+ wff1)
-	    		  (list wff2)))
-	  (cons (not-connector)
-	  		  (mapcar #'de-morgan (rest wff)))))))
-
-
-;;; FUNCIONA SOLO PARA EL PRIMER CASO
-(defun de-morgan (wff)
-	(if 
-	  ;(let ((connector (first (second wff))))
-	  (and (unary-connector-p (first wff)) (n-ary-connector-p (first (second wff))))
-	    ;;(list exchange-and-or (first (second wff))
-	    ;;	(list +not+ (de-morgan (rest (second wff)))))
-	    (cons (exchange-and-or (first (second wff)))
-	    	(mapcar #'(lambda (x) (put-nots (rest x))) (rest wff)))
-	    ;;(cons (exchange-and-or (first (second wff))) 
-;;DONTKNOW;;(list (exchange-andor-not (first (second wff))) (mapcar #'de-morgan (rest (second wff)))))
-;;APARTE HAY QUE LLAMAR POR CADA MAPCAR QUE HAGAMOS A REDUCE-NOT-NOT DE ESO
-	    wff))
-
-(defun put-nots (lst)
-	(combine-elem-lst +not+ lst))
-
-	    ;;(list exchange-and-or (first (second wff))
-	    ;;	(list +not+ (de-morgan (rest (second wff)))))
-	   ; (cons (exchange-and-or (first (second wff)))
-	    ;	(mapcar #'(lambda (x) (put-nots (de-morgan (rest x)))) (de-morgan (rest wff))))
-	    ;;(cons (exchange-and-or (first (second wff))) 
-;;DONTKNOW;;(list (exchange-andor-not (first (second wff))) (mapcar #'de-morgan (rest (second wff)))))
-;;APARTE HAY QUE LLAMAR POR CADA MAPCAR QUE HAGAMOS A REDUCE-NOT-NOT DE ESO
-	    ;wff))
-
-;;; CREO QUE HABRA QUE HACERLA RECURSIVA TAMBIEN AUNQUE FUNCIONA
-(defun reduce-not-not (wff)
-  (if
-  	(and (unary-connector-p (first wff)) (unary-connector-p (first (second wff)))) 
-  	  (rest (second wff))
-	  wff))
-
-(defun reduce-not-not (wff)
-	(if
-		(unary-connector-p (first wff))
-		  (if unary-connector-p (first (second wff))
-		  	(rest (second wff))
-		  	(reduce-not-not ()))
-		  wff))
-
+;;; A LO RI
+(defun reduce-scope-of-negation (wff)
+  (if (or (null wff) (literal-p wff))
+    wff
+    (let ((connector (first wff)) (expr (second wff)))
+      (if (eq +not+ connector)
+        (if (negative-literal-p expr)
+          (second expr)
+          (if (eq +not+ (first expr))
+            (reduce-scope-of-negation (rest expr))
+            (cons (exchange-and-or (first expr))
+              (mapcar #'(lambda(x) (reduce-scope-of-negation (list +not+ x))) (rest expr)))))
+        (cons connector
+          (mapcar #'reduce-scope-of-negation (rest wff)))))))
 ;;
 ;;  EJEMPLOS:
 ;;
-(reduce-scope-of-negation '(Â¬ (v p (Â¬ q) r))) 
-;;; (^ (Â¬ P) Q (Â¬ R))
-(reduce-scope-of-negation '(Â¬ (^ p (Â¬ q) (v  r s (Â¬ a))))) 
-;;;  (V (Â¬ P) Q (^ (Â¬ R) (Â¬ S) A))
+(reduce-scope-of-negation '(¬ (v p (¬ q) r))) 
+;;; (^ (¬ P) Q (¬ R))
+(reduce-scope-of-negation '(¬ (^ p (¬ q) (v  r s (¬ a))))) 
+;;;  (V (¬ P) Q (^ (¬ R) (¬ S) A))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.2.4: Comente el codigo adjunto 
@@ -1032,7 +979,7 @@
 
 (defun cnf (wff) ;; traduce una FBF prefijo en FNC apoyandose en las funciones auxiliares anteriores
   (cond
-   ((cnf-p wff) wff) ;;si la FBF estÃ¡ ya en FNC la devuelve
+   ((cnf-p wff) wff) ;;si la FBF está ya en FNC la devuelve
    ((literal-p wff) ;; si la FBF es un literal
     (list +and+ (list +or+ wff))) ;; devuelve (v (^ wff))
    ((let ((connector (first wff))) ;; llamamos conector al primer elemento de la wff 
@@ -1042,49 +989,49 @@
        ((equal +or+ connector) ;; si el conector es un ^
         (cnf (exchange-NF (cons +or+ (simplify +or+ (rest wff))))))))))) ;;devuelve una lista simplificada con ors
 
-(cnf-p 'a)
+
 (cnf 'a)
 
-(cnf '(v (Â¬ a) b c))
+(cnf '(v (¬ a) b c))
 (print (cnf '(^ (v (¬ a) b c) (¬ e) (^ e f (¬ g) h) (v m n) (^ r s q) (v u q) (^ x y))))
-(print (cnf '(v (^ (Â¬ a) b c) (Â¬ e) (^ e f (Â¬ g) h) (v m n) (^ r s q) (v u q) (^ x y))))
-(print (cnf '(^ (v p  (Â¬ q)) a (v k  r  (^ m  n)))))
+(print (cnf '(v (^ (¬ a) b c) (¬ e) (^ e f (¬ g) h) (v m n) (^ r s q) (v u q) (^ x y))))
+(print (cnf '(^ (v p  (¬ q)) a (v k  r  (^ m  n)))))
 (print (cnf '(v p  q  (^ r  m)  (^ n  a)  s )))
 (exchange-NF '(v p  q  (^ r  m)  (^ n  a)  s ))
-(cnf '(^ (v a b (^ y r s) (v k l)) c (Â¬ d) (^ e f (v h i) (^ o p))))
-(cnf '(^ (v a b (^ y r s)) c (Â¬ d) (^ e f (v h i) (^ o p))))
+(cnf '(^ (v a b (^ y r s) (v k l)) c (¬ d) (^ e f (v h i) (^ o p))))
+(cnf '(^ (v a b (^ y r s)) c (¬ d) (^ e f (v h i) (^ o p))))
 (cnf '(^ (^ y r s (^ p q (v c d))) (v a b)))
-(print (cnf '(^ (v (Â¬ a) b c) (Â¬ e) r s 
-                (v e f (Â¬ g) h) k (v m n) d)))
+(print (cnf '(^ (v (¬ a) b c) (¬ e) r s 
+                (v e f (¬ g) h) k (v m n) d)))
 ;;
-(cnf '(^ (v p (Â¬ q)) (v k r (^ m  n))))
-(print  (cnf '(v (v p q) e f (^ r  m) n (^ a (Â¬ b) c) (^ d s))))
-(print (cnf '(^ (^ (Â¬ y) (v r (^ s (Â¬ x)) (^ (Â¬ p) m (v c d))) (v (Â¬ a) (Â¬ b))) g)))
+(cnf '(^ (v p (¬ q)) (v k r (^ m  n))))
+(print  (cnf '(v (v p q) e f (^ r  m) n (^ a (¬ b) c) (^ d s))))
+(print (cnf '(^ (^ (¬ y) (v r (^ s (¬ x)) (^ (¬ p) m (v c d))) (v (¬ a) (¬ b))) g)))
 ;;
 ;; EJEMPLOS:
 ;;
 (cnf NIL)              ; NIL
 (cnf 'a)               ; (^ (V A))
-(cnf '(¬ a))           ; (^ (V (Â¬ A)))
-(cnf '(V (¬ P) (¬ P))) ; (^ (V (Â¬ P) (Â¬ P)))
+(cnf '(¬ a))           ; (^ (V (¬ A)))
+(cnf '(V (¬ P) (¬ P))) ; (^ (V (¬ P) (¬ P)))
 (cnf '(V A))           ; (^ (V A))
 (cnf '(^ (v p (¬ q)) (v k r (^ m  n))))
-;;;   (^ (V P (Â¬ Q)) (V K R M) (V K R N))
-(print  (cnf '(v (v p q) e f (^ r  m) n (^ a (Â¬ b) c) (^ d s))))
+;;;   (^ (V P (¬ Q)) (V K R M) (V K R N))
+(print  (cnf '(v (v p q) e f (^ r  m) n (^ a (¬ b) c) (^ d s))))
 ;;; (^ (V P Q E F R N A D)      (V P Q E F R N A S)
-;;;    (V P Q E F R N (Â¬ B) D)  (V P Q E F R N (Â¬ B) S)
+;;;    (V P Q E F R N (¬ B) D)  (V P Q E F R N (¬ B) S)
 ;;;    (V P Q E F R N C D)      (V P Q E F R N C S) 
 ;;;    (V P Q E F M N A D)      (V P Q E F M N A S) 
-;;;    (V P Q E F M N (Â¬ B) D)  (V P Q E F M N (Â¬ B) S) 
+;;;    (V P Q E F M N (¬ B) D)  (V P Q E F M N (¬ B) S) 
 ;;;    (V P Q E F M N C D)      (V P Q E F M N C S))
 ;;;
 (print 
- (cnf '(^ (^ (Â¬ y) (v r (^ s (Â¬ x)) 
-                      (^ (Â¬ p) m (v c d)))(v (Â¬ a) (Â¬ b))) g)))
-;;;(^ (V (Â¬ Y)) (V R S (Â¬ P)) (V R S M) 
-;;;   (V R S C D) (V R (Â¬ X) (Â¬ P)) 
-;;;   (V R (Â¬ X) M) (V R (Â¬ X) C D)
-;;;   (V (Â¬ A) (Â¬ B)) (V G))  
+ (cnf '(^ (^ (¬ y) (v r (^ s (¬ x)) 
+                      (^ (¬ p) m (v c d)))(v (¬ a) (¬ b))) g)))
+;;;(^ (V (¬ Y)) (V R S (¬ P)) (V R S M) 
+;;;   (V R S C D) (V R (¬ X) (¬ P)) 
+;;;   (V R (¬ X) M) (V R (¬ X) C D)
+;;;   (V (¬ A) (¬ B)) (V G))  
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.2.5:
@@ -1098,42 +1045,28 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun is-atom (x)
-	(if (or (truth-value-p x) (connector-p x) (literal-p x)) 
-		T nil))
-
-(defun eliminando-bien (cnf)
-  (if (literal-p cnf)
-      cnf                    
-    (mapcan #'(lambda (x)
-                (cond 
-                 ((literal-p x) (list x))
-                 ((n-ary-connector-p (first x)) ;;; si el primer elemento de la sublista es el n-ario a eliminar
-                  (mapcan  ;;;hacemos un mapcar eliminando nils
-                      #'(lambda (y) (eliminando-bien (list y)))  ;;;llamamos recursivamente a simplificar con el resto de sublistas
-                    (rest x))) 
-                 (t (list x)))) ;;; si no entra en ninguna de las dos condiciones anteriores, devuelve la sublista               
-      cnf)))
+(defun eliminate-connectors (cnf)
+  (mapcar #'rest (rest cnf)))
 
 (eliminate-connectors 'nil)
-(eliminate-connectors (cnf '(^ (v p  (Â¬ q))  (v k  r  (^ m  n)))))
+(eliminate-connectors (cnf '(^ (v p  (¬ q))  (v k  r  (^ m  n)))))
 (eliminate-connectors
- (cnf '(^ (v (Â¬ a) b c) (Â¬ e) (^ e f (Â¬ g) h) (v m n) (^ r s q) (v u q) (^ x y))))
+ (cnf '(^ (v (¬ a) b c) (¬ e) (^ e f (¬ g) h) (v m n) (^ r s q) (v u q) (^ x y))))
 
 (eliminate-connectors (cnf '(v p  q  (^ r  m)  (^ n  q)  s )))
-(eliminate-connectors (print (cnf '(^ (v p  (Â¬ q)) (Â¬ a) (v k  r  (^ m  n))))))
+(eliminate-connectors (print (cnf '(^ (v p  (¬ q)) (¬ a) (v k  r  (^ m  n))))))
 
 (eliminate-connectors '(^))
-(eliminate-connectors '(^ (v p (Â¬ q)) (v) (v k r)))
+(eliminate-connectors '(^ (v p (¬ q)) (v) (v k r)))
 (eliminate-connectors '(^ (v a b)))
 
 ;;   EJEMPLOS:
 ;;
 
-(eliminate-connectors '(^ (v p (Â¬ q)) (v k r)))
-;; ((P (Â¬ Q)) (K R))
-(eliminate-connectors '(^ (v p (Â¬ q)) (v q (Â¬ a)) (v s e f) (v b)))
-;; ((P (Â¬ Q)) (Q (Â¬ A)) (S E F) (B))
+(eliminate-connectors '(^ (v p (¬ q)) (v k r)))
+;; ((P (¬ Q)) (K R))
+(eliminate-connectors '(^ (v p (¬ q)) (v q (¬ a)) (v s e f) (v b)))
+;; ((P (¬ Q)) (Q (¬ A)) (S E F) (B))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.2.6
@@ -1146,18 +1079,23 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun wff-infix-to-cnf (wff)
-  (eliminate-connectors  
-    (cnf
-      (infix-to-prefix wff))))
+  (if (or (null wff) (literal-p wff))
+    wff
+    (eliminate-connectors  
+      (cnf
+        (reduce-scope-of-negation
+          (eliminate-conditional
+            (eliminate-biconditional 
+              (infix-to-prefix wff))))))))
 
 ;;
 ;; EJEMPLOS:
 ;; 
 (wff-infix-to-cnf 'a)
-(wff-infix-to-cnf '(Â¬ a))
-(wff-infix-to-cnf  '( (Â¬ p) v q v (Â¬ r) v (Â¬ s)))
-(wff-infix-to-cnf  '((p v (a => (b ^ (Â¬ c) ^ d))) ^ ((p <=> (Â¬ q)) ^ p) ^ e))
-;; ((P (Â¬ A) B) (P (Â¬ A) (Â¬ C)) (P (Â¬ A) D) ((Â¬ P) (Â¬ Q)) (Q P) (P) (E))
+(wff-infix-to-cnf '(¬ a))
+(wff-infix-to-cnf  '( (¬ p) v q v (¬ r) v (¬ s)))
+(wff-infix-to-cnf  '((p v (a => (b ^ (¬ c) ^ d))) ^ ((p <=> (¬ q)) ^ p) ^ e))
+;; ((P (¬ A) B) (P (¬ A) (¬ C)) (P (¬ A) D) ((¬ P) (¬ Q)) (Q P) (P) (E))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.3.1
@@ -1393,17 +1331,17 @@
 
 (defun extract-no-positive-clauses (lamda cnf) 
   (if (or (null cnf) (literal-p cnf))
-  	NIL
-  	(if (equal (member lamda (first cnf) :test #'equal) NIL)
-  		(cons (first cnf) (extract-no-positive-clauses lamda (rest cnf)))
-  		(extract-no-positive-clauses lamda (rest cnf)))))
+    NIL
+    (if (equal (member lamda (first cnf) :test #'equal) NIL)
+      (cons (first cnf) (extract-no-positive-clauses lamda (rest cnf)))
+      (extract-no-positive-clauses lamda (rest cnf)))))
 
 (defun extract-no-negative-clauses (lamda cnf) 
   (if (or (null cnf) (literal-p cnf))
-  	NIL
-  	(if (equal (member (list +not+ lamda) (first cnf) :test #'equal) NIL)
-  		(cons (first cnf) (extract-no-negative-clauses lamda (rest cnf)))
-  		(extract-no-negative-clauses lamda (rest cnf)))))
+    NIL
+    (if (equal (member (list +not+ lamda) (first cnf) :test #'equal) NIL)
+      (cons (first cnf) (extract-no-negative-clauses lamda (rest cnf)))
+      (extract-no-negative-clauses lamda (rest cnf)))))
 
 ;;
 ;;  EJEMPLOS:
@@ -1420,7 +1358,7 @@
 ;; (NIL)
 
 (extract-neutral-clauses 'r
-                           '((p (Â¬ q) r) (p q) (r (Â¬ s) q) (a b p) (a (Â¬ p) c) ((Â¬ r) s)))
+                           '((p (¬ q) r) (p q) (r (¬ s) q) (a b p) (a (¬ p) c) ((¬ r) s)))
 ;; ((P Q) (A B P) (A (Â¬ P) C))
 
 (extract-neutral-clauses 'p
@@ -1438,10 +1376,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun extract-positive-clauses (lamda cnf) 
   (if (or (null cnf) (literal-p cnf))
-  	NIL
-  	(if (equal (member lamda (first cnf) :test #'equal) NIL)
-  		(extract-positive-clauses lamda (rest cnf))
-  		(cons (first cnf) (extract-positive-clauses lamda (rest cnf))))))
+    NIL
+    (if (equal (member lamda (first cnf) :test #'equal) NIL)
+      (extract-positive-clauses lamda (rest cnf))
+      (cons (first cnf) (extract-positive-clauses lamda (rest cnf))))))
 
 
 ;;
@@ -1458,10 +1396,10 @@
 (extract-positive-clauses 'r '(NIL))
 ;; NIL
 (extract-positive-clauses 'r
-                             '((p (Â¬ q) r) (p q) (r (Â¬ s) q) (a b p) (a (Â¬ p) c) ((Â¬ r) s)))
+                             '((p (¬ q) r) (p q) (r (¬ s) q) (a b p) (a (¬ p) c) ((¬ r) s)))
 ;; ((P (Â¬ Q) R) (R (Â¬ S) Q))
 (extract-positive-clauses 'p
-                             '(((Â¬ p) (Â¬ q) r) ((Â¬ p) q) (r (Â¬ s) (Â¬ p) q) (a b (Â¬ p)) ((Â¬ r) (Â¬ p) s)))
+                             '(((¬ p) (¬ q) r) ((¬ p) q) (r (¬ s) (¬ p) q) (a b (¬ p)) ((¬ r) (¬ p) s)))
 ;; NIL
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1475,16 +1413,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun extract-negative-clauses (lamda cnf) 
   (if (or (null cnf) (literal-p cnf))
-  	NIL
-  	(if (equal (member (list +not+ lamda) (first cnf) :test #'equal) NIL)
-  		(extract-negative-clauses lamda (rest cnf))
-  		(cons (first cnf) (extract-negative-clauses lamda (rest cnf))))))
+    NIL
+    (if (equal (member (list +not+ lamda) (first cnf) :test #'equal) NIL)
+      (extract-negative-clauses lamda (rest cnf))
+      (cons (first cnf) (extract-negative-clauses lamda (rest cnf))))))
 
 ;;
 ;;  EJEMPLOS:
 ;;
 (extract-negative-clauses 'p
-                             '((p (Â¬ q) r) (p q) (r (Â¬ s) q) (a b p) (a (Â¬ p) c) ((Â¬ r) s)))
+                             '((p (¬ q) r) (p q) (r (¬ s) q) (a b p) (a (¬ p) c) ((¬ r) s)))
 ;; ((A (Â¬ P) C))
 
 (extract-negative-clauses 'r NIL)
@@ -1492,8 +1430,8 @@
 (extract-negative-clauses 'r '(NIL))
 ;; NIL
 (extract-negative-clauses 'r
-                             '((p (Â¬ q) r) (p q) (r (Â¬ s) q) (a b p) (a (Â¬ p) c) ((Â¬ r) s)))
-;; (((Â¬ R) S))
+                             '((p (¬ q) r) (p q) (r (¬ s) q) (a b p) (a (¬ p) c) ((¬ r) s)))
+;; (((¬ R) S))
 (extract-negative-clauses 'p
                              '(( p (Â¬ q) r) ( p q) (r (Â¬ s) p q) (a b p) ((Â¬ r) p s)))
 ;; NIL
@@ -1514,24 +1452,24 @@
 ;; SI pasa devuelves union k1 menos landa y k2 menos no lamda y elimina repitidos
 
 (defun resolve-on (lamda K1 K2)
-	(if (or (K1 NULL) (K2 NULL))
-		NIL
-		(cond 
-			((and (member lamda K1 :test #'equal) (member (list +not+ lamda) K2)) 
-				(eliminate-repeated-literals (union (remove lamda K1) (remove (list +not+ lamda) K2))))
-			((and (member (list +not+ lamda) K1 :test #'equal) (member lamda K2 :test #'equal))
-				(eliminate-repeated-literals (union (remove (list +not+ lamda) K1) (remove lamda K2))))
-			((t) nil))))
+  (if (or (equal K1 nil) (equal K2 nil))
+    NIL
+    (cond 
+      ((and (not (equal (member lamda K1 :test #'equal) nil)) (not (equal (member (list +not+ lamda) K2 :test #'equal) nil))) 
+        (list(eliminate-repeated-literals (union (remove lamda K1 :test #'equal) (remove (list +not+ lamda) K2 :test #'equal)))))
+      ((and (not (equal (member (list +not+ lamda) K1 :test #'equal) nil)) (not (equal (member lamda K2 :test #'equal) nil)))
+        (list(eliminate-repeated-literals (union (remove (list +not+ lamda) K1 :test #'equal) (remove lamda K2 :test #'equal)))))
+      (t  nil))))
 ;;
 ;;  EJEMPLOS:
 ;;
-(resolve-on 'p '(a b (Â¬ c) p) '((Â¬ p) b a q r s))
-;; (((Â¬ C) B A Q R S))
+(resolve-on 'p '(a b (¬ c) p) '((¬ p) b a q r s))
+;; (((¬ C) B A Q R S))
 
-(resolve-on 'p '(a b (Â¬ c) (Â¬ p)) '( p b a q r s))
-;; (((Â¬ C) B A Q R S))
+(resolve-on 'p '(a b (¬ c) (¬ p)) '( p b a q r s))
+;; (((¬ C) B A Q R S))
 
-(resolve-on 'p '(p) '((Â¬ p)))
+(resolve-on 'p '(p) '((¬ p)))
 ;; (NIL)
 
 
@@ -1541,10 +1479,10 @@
 (resolve-on 'p NIL NIL)
 ;; NIL
 
-(resolve-on 'p '(a b (Â¬ c) (Â¬ p)) '(p b a q r s))
-;; (((Â¬ C) B A Q R S))
+(resolve-on 'p '(a b (¬ c) (¬ p)) '(p b a q r s))
+;; (((¬ C) B A Q R S))
 
-(resolve-on 'p '(a b (Â¬ c)) '(p b a q r s))
+(resolve-on 'p '(a b (¬ c)) '(p b a q r s))
 ;; NIL
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1556,43 +1494,15 @@
 ;;            
 ;; EVALUA A : RES_lambda(cnf) con las clauses repetidas eliminadas
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;auxiliar recibe lamda clausula y cnf y luego mapcan #'(lamda(x) resolve-on lamda clausula x) cnf)) x distinta de lambda si no nil
+;;;union extract-neutral y mapcan 
+
+(defun aux (lamda clause cnf)
+  (mapcan #'(lambda(x) (if (not(equal x lamda)) (resolve-on lamda clause x) nil)) cnf))
+
 (defun build-RES (lamda cnf)
-  (union (extract-neutral-clauses lamda cnf) (resolve-on lamda (extract-positive-clauses lamda cnf) (extract-negative-clauses lamda cnf))))
-
-;;
-;;  EJEMPLOS:
-;;
-(build-RES 'p NIL)
-;; NIL
-(build-RES 'P '((A  (Â¬ P) B) (A P) (A B)));; ((A B))
-(build-RES 'P '((B  (Â¬ P) A) (A P) (A B)));; ((B A))
-
-(build-RES 'p '(NIL))
-;; (NIL)
-
-(build-RES 'p '((p) ((Â¬ p))))
-;; (NIL)
-
-(build-RES 'q '((p q) ((Â¬ p) q) (a b q) (p (Â¬ q)) ((Â¬ p) (Â¬ q))))
-;; ((P) ((Â¬ P) P) ((Â¬ P)) (B A P) (B A (Â¬ P)))
-
-(build-RES 'p '((p q) (c q) (a b q) (p (Â¬ q)) (p (Â¬ q))))
-;; ((A B Q) (C Q))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; EJERCICIO 4.4.5
-;; Construye el conjunto de clausulas RES para una FNC 
-;;
-;; RECIBE   : lambda - literal positivo
-;;            cnf    - FBF en FNC simplificada
-;;            
-;; EVALUA A : RES_lambda(cnf) con las clauses repetidas eliminadas
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun build-RES (lambda cnf)
-  ;;
-  ;; 4.4.5 Completa el codigo
-  ;;
-)
+  (eliminate-repeated-literals(eliminate-repeated-clauses (union (extract-neutral-clauses lamda cnf) (mapcan #'(lambda (x) (aux lamda x cnf)) (eliminate-repeated-clauses cnf))))))
 
 ;;
 ;;  EJEMPLOS:
@@ -1620,14 +1530,35 @@
 ;; atomos en la FNC 
 ;;
 ;; RECIBE   : cnf - FBF en FNC simplificada
-;; EVALUA A :	T  si cnf es SAT
+;; EVALUA A : T  si cnf es SAT
 ;;                NIL  si cnf es UNSAT
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun  RES-SAT-p (cnf) 
-  ;;
-  ;; 4.5 Completa el codigo
-  ;;
+  (cond
+    ((null cnf) t)
+    ((equal '(nil) cnf) nil)
+    ((member nil cnf) nil)
+    (t (RES-SAT-p-rec (extract-positive-literals cnf) cnf))
+    )  
   )
+
+(defun RES-SAT-p-rec (lamdas cnf)
+  (cond
+    ((or (null cnf) (null lamdas)) t)
+    ((equal '(nil) cnf) nil)
+    ((member nil cnf) nil)
+    (t 
+      (let* ((newlamda (first lamdas))
+        (newalpha (simplify-cnf (build-RES newlamda cnf))))
+      (RES-SAT-p-rec (rest lamdas) newalpha)))))
+
+(defun extract-positive-literals (cnf)
+  (if (null cnf)
+    NIL
+    (eliminate-repeated-literals (remove nil (mapcan #'(lambda (x) 
+      (mapcar #'(lambda (y) 
+        (if (equal (positive-literal-p y) t)
+          y nil)) x))cnf)))))
 
 ;;
 ;;  EJEMPLOS:
@@ -1650,7 +1581,7 @@
 (RES-SAT-p
  '(((¬ p) (¬ q) (¬ r)) (q r) ((¬ q) p) (p) (q) ((¬ r)) ((¬ p) (¬ q) r))) ;;; NIL
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.6:
 ;; Resolucion basada en RES-SAT-p
 ;;
@@ -1661,10 +1592,16 @@
 ;;            NIL en caso de que no sea consecuencia logica.  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun logical-consequence-RES-SAT-p (wff w)
-  ;;
-  ;; 4.6 Completa el codigo
-  ;;
-  )
+  (if (or (null wff) (null wff)) 
+    nil
+    (if (equal (RES-SAT-p (union (wff-infix-to-cnf wff) (wff-infix-to-cnf (notw w)))) t)
+      NIL t
+  )))
+
+(defun notw (w)
+  (if (negative-literal-p w)
+    (second w)
+    (list +not+ w)))
 
 ;;
 ;;  EJEMPLOS:
@@ -1727,7 +1664,6 @@
  (logical-consequence-RES-SAT-p 
   '(((¬ p) => q) ^ (p <=> ((¬ a) ^ b)) ^ ( (¬ p) => (r  ^ (¬ q)))) 
   '(¬ q)))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;                    EJERCICIO 5                         ;;;
