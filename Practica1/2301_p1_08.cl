@@ -457,9 +457,9 @@
 (defun negative-literal-p (x)                
   (and
    (listp x)                                 ;; Vemos que es una lista
-   (null  (cddr x))                          
-   (unary-connector-p (first x))
-   (positive-literal-p (first (rest x)))))
+   (null  (cddr x))                          ;; comprobamos que tiene dos elementos
+   (unary-connector-p (first x))             ;; El primero es un concetor unario
+   (positive-literal-p (first (rest x)))))   ;;El segundo un literal positivo
 
 ;; EJEMPLOS:
 (negative-literal-p '(~ p))        ; T
@@ -485,8 +485,8 @@
 ;;            NIL en caso contrario. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun literal-p (x) 
-  (or (positive-literal-p x) 
-      (negative-literal-p x)))
+  (or (positive-literal-p x)      ;;Miramos si es literal positivo o 
+      (negative-literal-p x)))    ;; si es literal negativo
 
 ;; EJEMPLOS:
 (literal-p 'p)             
@@ -551,23 +551,23 @@
 ;;            NIL en caso contrario. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun wff-infix-p (x)
-  (unless (null x)
-    (or (literal-p x)
-        (and (listp x)
+  (unless (null x)  ;;NIl no es un FBF en formato infijo
+    (or (literal-p x)  ;; Unliteral si que está en formato prefijo
+        (and (listp x) ;; Si es una lista tenemos los siguientes casos:
              (let ((op1 (car x))
                    (exp1 (cadr x))
                    (list_exp2 (cddr x)))
                (cond 
-                ((unary-connector-p op1)
+                ((unary-connector-p op1)   ;; Si el concector es unario comprobamos que el segundo elemento de la lista está en formato infijo
                  (and (null list_exp2)
                       (wff-infix-p exp1)))
-                ((n-ary-connector-p op1)
+                ((n-ary-connector-p op1)   ;; Por convención añadimos expresiones de la forma (^) o (v)
                  (null (rest x)))
-                ((binary-connector-p exp1)
+                ((binary-connector-p exp1) ;;;; Si el conector es binario, tiene que tener la estructura <op1 concetor op2>
                  (and (wff-infix-p op1)
                       (null (cdr list_exp2))
                       (wff-infix-p (car list_exp2))))
-                ((n-ary-connector-p exp1)
+                ((n-ary-connector-p exp1) ;;Si el operador es n-ario comprobamos que op1 está en formato prefijo y el reso cumple la funcion verify
                  (and (wff-infix-p op1)
                       (nop-verify exp1 (cdr x))))
                  (t NIL)))))))
@@ -663,32 +663,28 @@
 ;; EVALUA A : FBF en formato prefijo 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun infix-to-prefix (wff)
-  (when (wff-infix-p wff)
-    (if (literal-p wff)
+  (when (wff-infix-p wff)         ;; Si wff no esta en formato infijo se acabo
+    (if (literal-p wff)           ;; Si wff es un literal ya esta en formato prefijo e infijo
         wff
-      (let ((op1 (first wff))
+      (let ((op1 (first wff))     
             (rst_ele (rest wff))
             (conector (first (rest wff))))
         (cond
-         ((unary-connector-p op1)
+         ((unary-connector-p op1)                      ;;Si es un operado unario devolvemos la llamada recursiva con el segundo elemento de la  lista
           (list op1 (infix-to-prefix (second wff))))
-         ((binary-connector-p conector)
+         ((binary-connector-p conector)                ;; Si es un operando binario devolvamos la lista resultante de pasar op1 y op2 a formato prefijo
           (list conector (infix-to-prefix op1) (infix-to-prefix (third wff))))
-         ((n-ary-connector-p conector)
+         ((n-ary-connector-p conector)   ;; Si es operador unario:
           (cond
-           ((null rst_ele) wff)
-           ((null (cdr rst_ele))
+           ((null rst_ele) wff)     ;; Si es es de la forma (^) o (v) lo devolvemos.
+           ((null (cdr rst_ele))    ;; Si solo tiene un elemento, es decir (op1 conector) devolvemos pasando a prefijo el op1
             (infix-to-prefix op1))
-           (t (cons conector (mapcar #'(lambda (x) (infix-to-prefix x)) (list-def wff conector) )))))
-         (t nil))))))
+           (t (cons conector (mapcar #'(lambda (x) (infix-to-prefix x)) (list-def wff conector) ))))) ;;En otro caso devolvemos cada elemento en formato prefijo
+         (t nil))))))                                                                                 ;; añadiendo el concetor al principio
           
-(defun list-def (wff conector)
+(defun list-def (wff conector) ;; Funcion que elimina los conectores de una lista
   (remove-if #'(lambda (x) (equal conector x)) wff))
-  
-          
-(infix-to-prefix '(( a => b) v b v c))           
-           
-
+ 
             
 ;;
 ;; EJEMPLOS
@@ -743,20 +739,17 @@
 ;; RECIBE   : FBF en formato prefijo 
 ;; EVALUA A : T si FBF es una clausula, NIL en caso contrario. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun clause-p-aux (wff)
+  (cond ((null wff) t)  ;; Si es nil --> nil
+        ((equal nil (literal-p (first wff))) nil) ;;Si el primero elemento no es un literal --> nil
+        (t (clause-p-aux (cddr wff))))) ;; Llamamos a la funcion recursiva con el resto del resto
+
 (defun clause-p (wff)
-  (cond ((null wff) nil)  
-        ((not (listp wff)) nil)
-        ((not (equal 'v (first wff))) nil)
-        ((equal nil (rest wff)) t)
-        ((equal nil (no-binary-operation (cadr wff))) nil)
-        (t (clause-p (cons 'v (cddr wff)))))) 
-
-(defun no-binary-operation (exp)
-  (cond 
-   ((equal (literal-p exp) t))
-   (t (and (wff-prefix-p exp) (not (n-ary-connector-p (first exp)))))))
-
-(clause-p 'a)
+  (cond
+   ((null wff) nil)      ;;Si wff nil --> nil
+   ((not (listp wff)) nil)  ;;Si wff no es una lista --> nil
+   ((equal (first wff) 'v) (clause-p-aux (rest wff))) ;;Llamamos a la funcion auxiliar
+   (t nil))) ;;Cualquier otro caso nil
 
 ;;
 ;; EJEMPLOS:
@@ -783,14 +776,18 @@
 ;; EVALUA A : T si FBF esta en FNC con conectores, 
 ;;            NIL en caso contrario. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun cnf-p-aux (wff)
+  (cond ((null wff) t)  ;; Si es nil --> nil
+        ((equal nil (clause-p (first wff))) nil) ;;Si el primero elemento no es una clausula --> nil
+        (t (cnf-p-aux (rest wff))))) ;; Llamamos a la funcion recursiva con el resto del resto
+
 (defun cnf-p (wff)
   (cond
-   ((equal wff nil) nil)
-   ((not (listp wff)) nil)
-   ((not (equal '^ (first wff))) nil)
-   ((equal (cadr wff) nil) t)
-   ((equal nil (clause-p (cadr wff))) nil)
-   (t (cnf-p (cons '^ (cddr wff))))))
+   ((null wff) nil)      ;;Si wff nil --> nil
+   ((not (listp wff)) nil)  ;;Si wff no es una lista --> nil
+   ((equal (first wff) '^) (cnf-p-aux (rest wff))) ;;Llamamos a la funcion auxiliar
+   (t nil))) ;;Cualquier otro caso nil
 
 
 ;;
@@ -1107,10 +1104,10 @@
 
 (defun eliminate-repeated-literals (k)
   (cond 
-   ((equal k nil ) nil)
-   ((equal (find (first k) (rest k) :test #'equal) nil) (cons (first k) (eliminate-repeated-literals (rest k))))
-   (t (eliminate-repeated-literals (rest k)))))
-
+   ((equal k nil ) nil) ;; Si k es nil --> nil
+   ((equal (find (first k) (rest k) :test #'equal) nil) (cons (first k) (eliminate-repeated-literals (rest k)))) ;; Si el literal no esta repetido lo metemos en 
+   (t (eliminate-repeated-literals (rest k)))))                                                                   la solución y hacemos llamada recursiva con el
+  ;; Si esta repetido llamamos a la función con el resto de la lista                                              resto de la lista
 ;;
 ;; EJEMPLO:
 ;;
@@ -1128,16 +1125,18 @@
 (defun eliminate-repeated-clauses (cnf)
   (let ((operador (eliminate-repeated-literals (first cnf))))
   (cond 
-   ((equal cnf nil) nil)
-   ((equal (find operador (rest cnf) :test #'our-equal) nil) (cons operador (eliminate-repeated-clauses (rest cnf))))
-   (t (eliminate-repeated-clauses (rest cnf))))))
-    
-(defun contenido (l1 l2)
-  (if (equal nil l1)
+   ((equal cnf nil) nil)  ;; Si cnf nil --> nil
+   ((equal (find operador (rest cnf) :test #'our-equal) nil) (cons operador (eliminate-repeated-clauses (rest cnf)))) ;; El test es con la igualdad de conjuntos definida
+   (t (eliminate-repeated-clauses (rest cnf)))))) ;; LLamada recusriva con el resto de la lista si no hay ninguna clausula igual
+
+;; Funcion que nos determina si L1 esta contenida en L2 (contenido de conjuntos)
+(defun contenido (l1 l2)  
+  (if (equal nil l1)   ;; Nil simepre esta contenido en otra lista
       t
-    (and (not (equal nil (find (first l1) (eliminate-repeated-literals l2) :test #'equal)))
+    (and (not (equal nil (find (first l1) (eliminate-repeated-literals l2) :test #'equal))) ;; Utilizamos el test equal para que tome el igual por valor
          (contenido (rest l1) l2))))
 
+;; Definimos que dos clausulas si l1 esta contenido en l2 y viceversa
 (defun our-equal (l1 l2)
   (and (contenido l1 l2) (contenido l2 l1)))
 
