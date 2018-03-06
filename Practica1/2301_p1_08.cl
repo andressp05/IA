@@ -1102,17 +1102,25 @@
 ;; EVALUA A : clausula equivalente sin literales repetidos 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun eliminate-repeated-literals (k)
+(defun eliminate-repeated-literals-aux (k)
   (cond 
-   ((equal k nil ) nil) ;; Si k es nil --> nil
-   ((equal (find (first k) (rest k) :test #'equal) nil) (cons (first k) (eliminate-repeated-literals (rest k)))) ;; Si el literal no esta repetido lo metemos en 
-   (t (eliminate-repeated-literals (rest k)))))                                                                   la solución y hacemos llamada recursiva con el
-  ;; Si esta repetido llamamos a la función con el resto de la lista                                              resto de la lista
+   ((equal k nil ) '(nil))
+   ((equal (find (first k) (rest k) :test #'equal) nil) (cons (first k) (eliminate-repeated-literals (rest k))))
+   (t (eliminate-repeated-literals (rest k)))))
+
+(defun eliminate-repeated-literals (k)
+  (if (null k)
+      nil
+    (eliminate-repeated-literals-aux (remove nil k :test #'equal))))
+
+(eliminate-repeated-literals'(nil nil nil))
+
 ;;
 ;; EJEMPLO:
 ;;
 (eliminate-repeated-literals '(a b (~ c) (~ a) a c (~ c) c a))
 ;;;   (B (~ A) (~ C) C A)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.3.2
@@ -1191,20 +1199,23 @@
 (defun eliminate-subsumed-clauses (cnf)
   (remove-subsumed cnf cnf))
 
+;; Función que determina si k subsume en algina clausula de l
 (defun is-subsumed (k l)
   (unless (null l)
-    (or (and (not(null (subsume (car l) k)))
+    (or (and (not(null (subsume (car l) k)))   ;;si k subsume a una cláusula de l y no es él mismo hacemos que devuelva true
              (not (eq k (car l))))
-        (is-subsumed k (rest l)))))
+        (is-subsumed k (rest l)))))            ;;Llamada recursiva la función sobre la lista
 
 (is-subsumed '(a b c) '( (a b) (c d)))
 (is-subsumed '(a b c) '((a b c) '(a b c)))
-  
+
+;; Funcion que nos va a servir para eliminar clausulas subsumidas. Trabaja con dos listas que al comienzo son la misma
 (defun remove-subsumed (l1 final)
   (cond
-   ((null l1) nil)
-   ((is-subsumed (first l1) final) (remove-subsumed (rest l1) final))
-   (t (cons (first l1) (remove-subsumed (rest l1) final )))))
+   ((null l1) nil) ;;Si es nil l1 y por tanto nil final --> nil
+   ((is-subsumed (first l1) final) (remove-subsumed (rest l1) final)) ;; Si el primer elemento subsume alguno de la lista original, llamda recursiva con el resto 
+                                                                      ;; de la lista para eliminarlo
+   (t (cons (first l1) (remove-subsumed (rest l1) final )))))         ;; Si no subsume metemos el elemento al resultado de la llamda recursiva sobre el resto
 
  
 ;;
@@ -1230,27 +1241,27 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun tautology-p (k) 
   (let ((op (first k)))
-    (cond 
-     ((equal k nil) nil)
-     ((equal (positive-literal-p op) t) (or (tautology-p (rest k)) (en-tauto op k)))
-     ((equal (negative-literal-p op) t) (or (tautology-p (rest k)) (en-tauto op k))))))
+    (if (equal k nil)    ;; Si k nil --> nil
+        nil
+      (or (tautology-p (rest k)) (en-tauto op k))))) ;; Comprobamos la condicion de en-tauto para todos los literales de K.
 
+;; Definimos una igualdad de literales un tanto especial que nos va a venri muy bien para deteminar tautologias
 (defun equal-inv (a b)
   (cond
-   ((and (positive-literal-p a) (negative-literal-p b))
+   ((and (positive-literal-p a) (negative-literal-p b))   ;; Si a = p y  b = (~ c). Comprobamos si P es igual a c
     (equal (second b) a))
-  ((and (negative-literal-p a) (positive-literal-p b))
+  ((and (negative-literal-p a) (positive-literal-p b))    ;; Caso contrario al anterior.
     (equal (second a) b))
    (t nil)))
     
 (equal-inv 'a '(¬ a))
 
-(defun en-tauto (a k)
+(defun en-tauto (a k)  ;; Función que busca en función de la igualdad definida si un literal es "igual" a otro de k.
   (if (equal (find a k :test #'equal-inv) nil)
       nil
     t))
 
-(en-tauto 'b '(a a b (¬ b) c))
+(en-tauto 'b '(a a b (~ b) c))
 
 ;;
 ;;  EJEMPLOS:
@@ -1534,13 +1545,10 @@
 
 (defun RES-SAT-p-rec (lamdas cnf)
   (cond
-   ((member nil cnf) nil)
-   ((and (null cnf) (null lamdas)) nil)
-   ((or (null cnf) (null lamdas)) t)
    ((equal '(nil) cnf) nil)
-   (t 
-    (let* 
-        ((newlamda (first lamdas))
+   ((or (null cnf) (null lamdas)) t)
+    (t 
+      (let* ((newlamda (first lamdas))
         (newalpha (simplify-cnf (build-RES newlamda cnf))))
       (RES-SAT-p-rec (rest lamdas) newalpha)))))
 
@@ -1551,9 +1559,6 @@
       (mapcar #'(lambda (y) 
         (if (equal (positive-literal-p y) t)
             y nil)) x))cnf)))))
-
-(build-RES 'R '((R)))
-
 ;;
 ;;  EJEMPLOS:
 ;;
@@ -1573,7 +1578,7 @@
 (RES-SAT-p '((P (~ Q)) NIL (K R))) ;;; NIL
 (RES-SAT-p '(nil))         ;;; NIL
 (RES-SAT-p '((S) nil))     ;;; NIL 
-(RES-SAT-p '((p) (~ p))) ;;; NIL
+(RES-SAT-p '((p) ((~ p)))) ;;; NIL
 (RES-SAT-p
  '(((~ p) (~ q) (~ r)) (q r) ((~ q) p) (p) (q) ((~ r)) ((~ p) (~ q) r))) ;;; NIL
 
@@ -1587,12 +1592,12 @@
 ;; EVALUA A : T   si w es consecuencia logica de wff
 ;;            NIL en caso de que no sea consecuencia logica.  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-#| (defun logical-consequence-RES-SAT-p (wff w)
-  (if (or (null wff) (null wff)) 
-      nil
-    (if (equal (RES-SAT-p (union (wff-infix-to-cnf wff) (list (wff-infix-to-cnf (notw w))))) t)
-      NIL t
-  ))) |#
+;;(defun logical-consequence-RES-SAT-p (wff w)
+  ;;(if (or (null wff) (null wff)) 
+    ;;  nil
+    ;;(if (equal (RES-SAT-p (union (wff-infix-to-cnf wff) (list (wff-infix-to-cnf (notw w))))) t)
+      ;;NIL t
+  ;;))) 
 
 (defun logical-consequence-RES-SAT-p (wff w)
   (not (rest-sat-p (simplify-cnf (union (wff-infix-to-cnf wff) (list (list notw)))))))
