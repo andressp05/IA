@@ -1785,7 +1785,6 @@
       nil
     (mapcar #'(lambda(n)(cons n path))(rest (assoc node net)))))
 
-(nodo-in-path 'e '( h b c d e))
 (new-paths-improved '(a d) 'a '((a d) (b d f) (c e) (d f) (e b f) (f)))
 
 (defun bfs-improved (end queue net)
