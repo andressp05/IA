@@ -894,21 +894,19 @@
    ((eq connector +or+) +and+)                           ;; Si el conector es un or, devuelvo el and
    (t connector)))                                       ;; Si no devolvemos true
 
-;;; CAMBIARRR
 (defun reduce-scope-of-negation (wff)                                       ;; Funcion principal que reduce al ambito de la negacion
   (if (or (null wff) (literal-p wff))                                       ;; Caso base, si la wff es nula o literal
     wff                                                                     ;; devuelve la propia wff
-    (let ((connector (first wff)) (expr (second wff)))                      ;; llamamos connector al primer valor
-      (if (eq +not+ connector)
-        (if (negative-literal-p expr)
-          (second expr)
-          (if (eq +not+ (first expr))
-            (reduce-scope-of-negation (rest expr))
-            (cons (exchange-and-or (first expr))
-              (mapcar #'(lambda(x) 
-                (reduce-scope-of-negation (list +not+ x))) (rest expr)))))
-        (cons connector
-          (mapcar #'reduce-scope-of-negation (rest wff)))))))
+      (if (eq +not+ (first wff))                                            ;; si el primer elemento es not
+        (if (negative-literal-p (second wff))                               ;; y el segundo es un literal negativo
+          (second (second wff))                                             ;; aplicamos (notnot a) = a
+          (if (eq +not+ (first (second wff)))                               ;; si no, miramos el primer elemento de la expresion interna
+            (reduce-scope-of-negation (rest (second wff)))                  ;; si es un not llamamos recursivamente sobre el
+            (cons (exchange-and-or (first (second wff)))                    ;; si no es un not, es un and o un or  y aplicamos demorgan
+              (mapcar #'(lambda(x)                                          ;; para aplicar demorgan hacemos un mapcar de lo interno
+                (reduce-scope-of-negation (list +not+ x))) (rest (second wff))))))   ;; y usamos la formula
+        (cons (first wff)
+          (mapcar #'reduce-scope-of-negation (rest wff))))))                ;; caso de que no sea un not lo primero, llamamos recursivamente
 
 ;;
 ;;  EJEMPLOS:
@@ -1089,7 +1087,7 @@
 ;; EJEMPLOS:
 ;; 
 (wff-infix-to-cnf 'a)
-(wff-infix-to-cnf '(~ a))
+(wff-infix-to-cnf '(a))
 (wff-infix-to-cnf  '( (~ p) v q v (~ r) v (~ s)))
 (wff-infix-to-cnf  '((p v (a => (b ^ (~ c) ^ d))) ^ ((p <=> (~ q)) ^ p) ^ e))
 ;; ((P (~ A) B) (P (~ A) (~ C)) (P (~ A) D) ((~ P) (~ Q)) (Q P) (P) (E))
@@ -1279,9 +1277,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun eliminate-tautologies (cnf) 
   (cond
-   ((null cnf) nil)
-   ((tautology-p (first cnf)) (eliminate-tautologies (rest cnf)))
-   (t (cons (first cnf) (eliminate-tautologies(rest cnf))))))
+   ((null cnf) nil)   ;; Caso base nil --> nil
+   ((tautology-p (first cnf)) (eliminate-tautologies (rest cnf)))  ;; Si el primero es tautologia lo eliminamos
+   (t (cons (first cnf) (eliminate-tautologies(rest cnf)))))) ;; Si no lo concatenamos a lo que de vuleve la funcón con el resto
 
 ;;
 ;;  EJEMPLOS:
@@ -1307,7 +1305,7 @@
 ;;            y sin clausulas subsumidas
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun simplify-cnf (cnf) 
-   (eliminate-subsumed-clauses(eliminate-tautologies(eliminate-repeated-clauses cnf))))
+  (eliminate-subsumed-clauses(eliminate-tautologies(eliminate-repeated-clauses cnf)))) ;;Llamamos al resto de funciones para que simplifican la expresion
 
 ;;
 ;;  EJEMPLOS:
@@ -1499,9 +1497,11 @@
 ;; EVALUA A : RES_lambda(cnf) con las clauses repetidas eliminadas
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
 
-(defun aux (lamda clause cnf)                                         ;; Funcion auxiliar que resuelve para las lamdas
+;; Funcion auxiliar que resuelve para cada lamda
+(defun aux (lamda clause cnf)
   (mapcan #'(lambda(x) (if (not(equal x lamda)) (resolve-on lamda clause x) nil)) cnf))
 
+;; Funcion principal que llama recursivamente a la auxiliar para todos los lamdas
 (defun build-RES (lamda cnf)
   (eliminate-repeated-literals(eliminate-repeated-clauses (union (extract-neutral-clauses lamda cnf) (mapcan #'(lambda (x) (aux lamda x cnf)) (eliminate-repeated-clauses cnf))))))
 
@@ -1536,26 +1536,29 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun  RES-SAT-p (cnf) 
   (cond
-    ((null cnf) t)
-    ((equal '(nil) cnf) nil)
-    ((member nil cnf) nil)
-    (t (RES-SAT-p-rec (extract-positive-literals cnf) cnf))
+    ((null cnf) t)                                            ;; caso base
+    ((equal '(nil) cnf) nil)                                  ;; segundo caso base
+    ((member nil cnf) nil)                                    ;; caso en el que haya algún nil
+    (t (RES-SAT-p-rec (extract-positive-literals cnf) cnf))   ;; llamamos a la funcion auxiliar recursiva
     )  
   )
 
+;; Funcion recursiva para poder implementar el algoritmo
 (defun RES-SAT-p-rec (lamdas cnf)
   (cond
-   ((equal '(nil) cnf) nil)
-   ((or (null cnf) (null lamdas)) t)
+   ((or (null cnf) (null lamdas)) t)                ;; caso base
     (t 
-      (let* ((newlamda (first lamdas))
-        (newalpha (simplify-cnf (build-RES newlamda cnf))))
-      (RES-SAT-p-rec (rest lamdas) newalpha)))))
+      (let* ((newlamda (first lamdas))              
+             (newalpha (simplify-cnf (build-RES newlamda cnf))))
+        (if (some #'null newalpha)
+            nil
+          (RES-SAT-p-rec (rest lamdas) newalpha)))))) ;; Aplicamos el algoritmo dado, simplificar de resolver
 
+;; Funcion auxiliar que extrae los literales positivos de una cnf a una lista
 (defun extract-positive-literals (cnf)
   (if (null cnf)
-    NIL
-    (eliminate-repeated-literals (remove nil (mapcan #'(lambda (x) 
+    NIL                                                                ;; caso base
+    (eliminate-repeated-literals (remove nil (mapcan #'(lambda (x)     
       (mapcar #'(lambda (y) 
         (if (equal (positive-literal-p y) t)
             y nil)) x))cnf)))))
@@ -1581,6 +1584,7 @@
 (RES-SAT-p '((p) ((~ p)))) ;;; NIL
 (RES-SAT-p
  '(((~ p) (~ q) (~ r)) (q r) ((~ q) p) (p) (q) ((~ r)) ((~ p) (~ q) r))) ;;; NIL
+(RES-SAT-p '(((~ q)) (q) ((~ A))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.6:
@@ -1592,28 +1596,31 @@
 ;; EVALUA A : T   si w es consecuencia logica de wff
 ;;            NIL en caso de que no sea consecuencia logica.  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;(defun logical-consequence-RES-SAT-p (wff w)
-  ;;(if (or (null wff) (null wff)) 
-    ;;  nil
-    ;;(if (equal (RES-SAT-p (union (wff-infix-to-cnf wff) (list (wff-infix-to-cnf (notw w))))) t)
-      ;;NIL t
-  ;;))) 
 
-(defun logical-consequence-RES-SAT-p (wff w)
-  (not (rest-sat-p (simplify-cnf (union (wff-infix-to-cnf wff) (list (list notw)))))))
-
+;; funcion auxiliar que devuelve not w 
 (defun notw (w)
-  (if (negative-literal-p w)
-    (second w)
-    (reduce-scope-of-negation (list +not+ w))))
+  (if (negative-literal-p w)         ;; si es negativo w
+    (list(list(second w)))           ;; devuelvo w
+    (list(list(list +not+ w)))))     ;; si no, not w
+
+(notw '(~ a))
+
+;; Funcion principal que aplica el algoritmo
+(defun logical-consequence-RES-SAT-p (wff w)
+  (not (res-sat-p (union
+                   (simplify-cnf (wff-infix-to-cnf wff))
+                   (notw w)))))     ;; metemos w negado y hacemos resolucion con wff
 
 ;;
 ;;  EJEMPLOS:
 ;;
+(wff-infix-to-cnf '(q))
+
+
 (logical-consequence-RES-SAT-p NIL 'a) ;;; NIL
 (logical-consequence-RES-SAT-p NIL NIL) ;;; NIL
 (logical-consequence-RES-SAT-p '(q ^ (~ q)) 'a) ;;; T 
-(logical-consequence-RES-SAT-p '(q ^ (~ q)) '(~ a)) ;;; T 
+
 
 (logical-consequence-RES-SAT-p '((p => (~ p)) ^ p) 'q)
 ;; T
@@ -1624,11 +1631,11 @@
 (logical-consequence-RES-SAT-p '((p => q) ^ p) 'q)
 ;; T
 
-(logical-consequence-RES-SAT-p '((p => q) ^ p) '(~q))
+(logical-consequence-RES-SAT-p '((p => q) ^ p) '(~ q))
 ;; NIL
 
 (logical-consequence-RES-SAT-p 
- '(((~ p) => q) ^ (p => (a v (~ b))) ^ (p => ((~ a) ^ b)) ^ ( (~ p) => (r  ^ (~ q)))) 
+ '(((~ p) => q) ^ (p => (a v (~ b))) e^ (p => ((~ a) ^ b)) ^ ( (~ p) => (r  ^ (~ q)))) 
  '(~ a))
 ;; T
 
@@ -1779,28 +1786,32 @@
 ;; El problema es que se vuelven a explorar nodos ya explorados
 ;; Sol: eliminación de los estados repetidos
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(shortest-path 'a 'd '((a b) (b c) (c a) (d))) ;; No tiene solución, ya que hay un recursión infinita por culpa de un lazo
+;;(shortest-path 'a 'd '((a b) (b c) (c a) (d))) ;; No tiene solución, ya que hay un recursión infinita por culpa de un lazo
 
 
-(defun nodo-in-path (n l)
-  (if (equal (member n l :test #'equal) nil)
+(defun nodo-in-path (l) ;; Funcion que sirve para ver si un elemento esta en el path
+  (or (null l)
+      (and (not (member (first l) (rest l)))
+           (nodo-in-path (rest l)))))
+      
+
+(defun new-paths-improved (path node net)   ;; La diferencia es que si el nodo ya esta en el path, no lo vuleves a explorar.
+  (if (nodo-in-path path)
       nil
-    t))
+    (mapcar #'(lambda(n)(cons n path))(rest (assoc node net)))))
 
 (nodo-in-path 'e '( h b c d e))
-
+(new-paths-improved '(a d) 'a '((a d) (b d f) (c e) (d f) (e b f) (f)))
 
 (defun bfs-improved (end queue net)
-  (if (null queue) '()
-    (let* ((path (first queue))
-           (node (first path)))
-      (if (eql node end)                                        ;; La diferencia es que comprueba si el nod ya se encuentra en la lista de nodos explorados.        
-          (reverse path)                                        ;; Si está solo hacemos que se devuelva el resto de la lista, no aportando ningún camino nuevo
-        (if (nodo-in-path node path)
-            (bfs-improved end (rest queue) net)                 ;; Si no está hacemos lo que se hacía enla primera versión
-          (bfs-improved end (append (rest queue) (new-paths path node net)) net))))))
+	(if (null queue) '()
+		(let* ((path (first queue))
+			(node (first path)))
+		(if (eql node end)
+			(reverse path)
+		  (bfs-improved end
+		  	(append (rest queue)
+		  		(new-paths-improved path node net))
+		  	net)))))
 
-
-(defun shortest-path-improved (end queue net)    ;; Funcion que llama bfs-improves para encontrar el camino mas corto sin estado repetidos entre a y b en un grafo
-  (bfs end queue net))
-               
+(defun shortest-path-improved (start end net) (bfs-improved end (list (list start)) net))
