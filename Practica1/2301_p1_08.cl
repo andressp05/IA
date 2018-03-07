@@ -1760,20 +1760,7 @@
 
 
 (shortest-path 'a 'f '((a d) (b d f) (c e) (d f) (e b f) (f)))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; 0[5]: (SHORTEST-PATH A F ((A D) (B D F) (C E) (D F) (E B F) (F)))
-;;  1[5]: (BFS F ((A)) ((A D) (B D F) (C E) (D F) (E B F) (F)))
-;;   2[5]: (BFS F ((D A)) ((A D) (B D F) (C E) (D F) (E B F) (F)))
-;;    3[5]: (BFS F ((F D A)) ((A D) (B D F) (C E) (D F) (E B F) (F)))
-;;    3[5]: returned (A D F)
-;;   2[5]: returned (A D F)
-;;  1[5]: returned (A D F)
-;; 0[5]: returned (A D F)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(shortest-path 'f 'c '((a c d e) (b d e f) (c a g) (d a b h g) (e a b h g) (f b h) (g c d e h) (h d e f g))) ;; Camino mas corto
-;; f b a c tambien (depende de como se describa el grafo)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 5.8:
@@ -1786,8 +1773,6 @@
 ;; El problema es que se vuelven a explorar nodos ya explorados
 ;; Sol: eliminación de los estados repetidos
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;(shortest-path 'a 'd '((a b) (b c) (c a) (d))) ;; No tiene solución, ya que hay un recursión infinita por culpa de un lazo
-
 
 (defun nodo-in-path (l) ;; Funcion que sirve para ver si un elemento esta en el path
   (or (null l)
