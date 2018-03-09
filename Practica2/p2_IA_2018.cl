@@ -1,10 +1,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
 ;;    Lab assignment 2: Search
-;;    LAB GROUP: 
-;;    Couple:  
-;;    Author 1: 
-;;    Author 2:
+;;    LAB GROUP: 2301
+;;    Couple:  08
+;;    Author 1: Andres Salas
+;;    Author 2: Ricardo Riol
 ;;
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -94,12 +94,17 @@
 (defparameter *planets-forbidden*   '(Avalon))
 (defparameter *planets-mandatory*   '(Katril Proserpina))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                         1. MODELING PROBLEM                         ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
 ;; BEGIN: Exercise 1 -- Evaluation of the heuristic
 ;;
 ;; Returns the value of the heuristics for a given state
+;;
+;; F-H-GALAXY
 ;;
 ;;  Input:
 ;;    state: the current state (vis. the planet we are on)
@@ -129,10 +134,33 @@
 ;;
 ;; BEGIN: Exercise 2 -- Navigation operators
 ;;
+;; Returns a list of actions that can be done with the state given
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; NAVIGATE-WHITE-HOLE
+;;
+;;  Input:
+;;    state: the current state (vis. the planet we are on)
+;;    white-holes: 
+;;
+;;  Returns:
+;;    
+;;
 
 (defun navigate-white-hole (state white-holes)
   ...)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; NAVIGATE-WORM-HOLE
+;;
+;;  Input:
+;;    state: the current state (vis. the planet we are on)
+;;    worm-holes: 
+;;    planets-forbidden: 
+;;
+;;  Returns:
+;;    
+;;
 
 (defun navigate-worm-hole (state worm-holes planets-forbidden)
   ...)
@@ -167,6 +195,18 @@
 ;;
 ;; BEGIN: Exercise 3 -- Goal test
 ;;
+;; Returns wheter the goal is reached or not
+;;
+;; F-GOAL-TEST-GALAXY
+;;
+;;  Input:
+;;    node: 
+;;    planets-destination: 
+;;    planets-mandatory: 
+;;
+;;  Returns:
+;;    T if is reached or NIL if not
+;;
 
 (defun f-goal-test-galaxy (node planets-destination planets-mandatory) 
   ...)
@@ -192,9 +232,20 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                     2. PROBLEM FORMALIZATION                        ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  BEGIN: Exercise 4 -- Define the galaxy structure
 ;;
+;; Create the galaxy structure
+;;
+;; STRUCTURE GALAXY-M35
+;;
+;;  Parameters:
+;;    camp1
+;;    camp2
 ;;
 (defparameter *galaxy-M35* 
   (make-problem 
@@ -216,6 +267,18 @@
 ;;
 ;; BEGIN Exercise 5: Expand node
 ;;
+;; Returns wheter the goal is reached or not
+;;
+;; EXPAND-NODE
+;;
+;;  Input:
+;;    node: 
+;;    problem: 
+;;
+;;  Returns:
+;;    
+;;
+
 (defun expand-node (node problem)
   ...)
 
@@ -280,7 +343,19 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;;  BEGIN Exercise 6 -- Node list management
-;;;  
+;;
+;;  Inserts a list of nodes into another list of nodes
+;;
+;; INSERT-NODES-STRATEGY
+;;
+;;  Input:
+;;    node: 
+;;    lst-nodes: 
+;;    strategy: 
+;;
+;;  Returns:
+;;    
+;;
 (defun insert-nodes-strategy (nodes lst-nodes strategy)
   ...)
 
@@ -342,6 +417,9 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                             3. SEARCH                               ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
