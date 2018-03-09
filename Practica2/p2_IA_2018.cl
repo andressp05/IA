@@ -349,7 +349,7 @@
 ;; INSERT-NODES-STRATEGY
 ;;
 ;;  Input:
-;;    node: 
+;;    nodes: 
 ;;    lst-nodes: 
 ;;    strategy: 
 ;;
@@ -441,13 +441,36 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
-;;;    BEGIN Exercise 8: Search algorithm
-;;;
+;; 
+;;    BEGIN Exercise 8: Search algorithm
+;;
+;; descripcion generica
+;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; GRAPH-SEARCH
+;;
+;;  Input:
+;;    problem:  
+;;    strategy: 
+;;
+;;  Returns:
+;;    
+;;
+
 (defun graph-search (problem strategy)
   ...)
 
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; A-STAR-SEARCH
+;;
+;;  Input:
+;;    problem:  
+;;    strategy: 
+;;
+;;  Returns:
+;;    
+;;
 ;
 ;  Solve a problem using the A* strategy
 ;
@@ -474,14 +497,36 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
-;;;    BEGIN Exercise 9: Solution path / action sequence
-;;;
+;; 
+;;    BEGIN Exercise 9: Solution path / action sequence
+;;
+;; descripcion generica
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; SOLUTION-PATH
+;;
+;;  Input:
+;;    node:
+;;
+;;  Returns:
+;;    
+;;
+
 (defun solution-path (node)
   ...)
 
 (solution-path nil) ;;; -> NIL 
 (solution-path (a-star-search *galaxy-M35*))  ;;;-> (MALLORY ...)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ACTION-SEQUENCE-AUX
+;;
+;;  Input:
+;;    node: 
+;;
+;;  Returns:
+;;    
+;;
 
 (defun action-sequence-aux (node)
   ...)
@@ -490,16 +535,20 @@
 ;;; ->
 ;;;(#S(ACTION :NAME ...)) 
 
-;;; 
-;;;    END Exercise 9: Solution path / action sequence
-;;;
+;; 
+;;    END Exercise 9: Solution path / action sequence
+;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
-;;;    BEGIN Exercise 10: depth-first / breadth-first
-;;;
+;; 
+;;    BEGIN Exercise 10: depth-first / breadth-first
+;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                         DEPTH-FIRST STRATEGY                         ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defparameter *depth-first*
   (make-strategy
@@ -511,6 +560,10 @@
 
 (solution-path (graph-search *galaxy-M35* *depth-first*))
 ;;; -> (MALLORY ... )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                        BREADTH-SEARCH STRATEGY                       ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defparameter *breadth-first*
   (make-strategy
