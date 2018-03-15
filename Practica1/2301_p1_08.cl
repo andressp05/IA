@@ -1781,7 +1781,7 @@
       
 
 (defun new-paths-improved (path node net)   ;; La diferencia es que si el nodo ya esta en el path, no lo vuleves a explorar.
-  (if (equal(nodo-in-path path) nill)
+  (if (equal (nodo-in-path path) nill)
       nil
     (mapcar #'(lambda(n)(cons n path))(rest (assoc node net)))))
 

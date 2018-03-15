@@ -79,15 +79,27 @@
 (defparameter *planets* '(Avalon Davion Katril Kentares Mallory Proserpina Sirtis))
 
 (defparameter *white-holes*  
-  '((Avalon Mallory 6.4) (Avalon Proserpina 8.6)...))
+  '((Avalon Mallory 6.4) (Avalon Proserpina 8.6)
+    (Mallory Katril 10) (Mallory Proserpina 15)
+    (Katril Mallory 10) (Katril Davion 9)
+    (Kentares Katril 10) (Kentares Avalon 3) (Kentares Proserpina 7)
+    (Proserpina Avalon 8.6) (Proserpina Mallory 15) (Proserpina Davion 5) (Proserpina Sirtis 12)
+    (Davion Proserpina 5) (Davion Sirtis 6)
+    (Sirtis Davion 6) (Sirtis Proserpina 12)
+    ))
 
 (defparameter *worm-holes*  
   '((Avalon Kentares 4) (Avalon Mallory 9)
     (Davion Katril 5) (Davion Sirtis 8)  
-    (Kentares Avalon 4) (Kentares Proserpina 12) ...))
+    (Kentares Avalon 4) (Kentares Proserpina 12)
+    (Mallory Avalon 9) (Mallory Katril 5) (Mallory Proserpina 11)
+    (Katril Mallory 5) (Katril Davion 5) (Katril Sirtis 10)
+    (Proserpina Mallory 11) (Proserpina Kentares 12) (Proserpina Sirtis 9)
+    (Sirtis Katril 10) (Sirtis Davion 8) (Sirtis Proserpina 9)
+    ))
  
 (defparameter *sensors* 
-  '((Avalon 15) (Davion 5) ...))
+  '((Avalon 15) (Davion 5) (Mallory 12) (Kentares 14) (Proserpina 7) (Katril 9) (Sirtis 0)))
 
 (defparameter *planet-origin* 'Mallory)
 (defparameter *planets-destination* '(Sirtis))
@@ -116,8 +128,9 @@
 ;;  Returns:
 ;;    The cost (a number) or NIL if the state is not in the sensor list
 ;;
+
 (defun f-h-galaxy (state sensors)
-  ...)
+  (second (assoc state sensors)))
 
 (f-h-galaxy 'Sirtis *sensors*) ;-> 0
 (f-h-galaxy 'Avalon *sensors*) ;-> 15
@@ -128,6 +141,7 @@
 ;; END: Exercise 1 -- Evaluation of the heuristic
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
