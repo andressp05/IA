@@ -14,13 +14,16 @@
 ;;    Problem definition
 ;;
 (defstruct problem
-  states              ; List of states
-  initial-state       ; Initial state
-  f-goal-test         ; reference to a function that determines whether 
-                      ; a state fulfills the goal 
-  f-h                 ; reference to a function that evaluates to the 
-                      ; value of the heuristic of a state
-  operators)          ; list of operators (references to functions) to generate succesors
+  states               ; List of states
+  initial-state        ; Initial state
+  f-h                  ; reference to a function that evaluates to the 
+                       ; value of the heuristic of a state
+  f-goal-test          ; reference to a function that determines whether 
+                       ; a state fulfils the goal 
+  f-search-state-equal ; reference to a predictate that determines whether
+                       ; two nodes are equal, in terms of their search state      
+  operators)           ; list of operators (references to functions) to 
+                       ; generate successors
 ;;
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -129,7 +132,7 @@
 ;;    The cost (a number) or NIL if the state is not in the sensor list
 ;;
 
-(defun f-h-galaxy (state sensors)
+(defun f-h-galaxy (state sensors)  
   (second (assoc state sensors)))
 
 (f-h-galaxy 'Sirtis *sensors*) ;-> 0
@@ -162,7 +165,18 @@
 ;;
 
 (defun navigate-white-hole (state white-holes)
-  ...)
+  (let ((aux (first white-holes)))
+    (cond
+     ((null white-holes) nil)
+     ((equal (first aux) state) (cons (make-action : name 'Navigate-white-whole
+                                                   :origin state
+                                                   :final (second aux)
+                                                   :cost (third aux))
+                                      (navigate-white-hole state (rest white-holes))))
+     (t (navigate-white-hole state (rest white-holes))))))
+
+        
+(navigate-white-hole 'Kentares *white-holes*) ; Lo hace bien
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; NAVIGATE-WORM-HOLE
@@ -177,7 +191,20 @@
 ;;
 
 (defun navigate-worm-hole (state worm-holes planets-forbidden)
-  ...)
+  (let ((aux (first worm-holes)))
+    (cond
+     ((null worm-holes) nil)
+     ((and (equal (first aux) state) (not(find (second aux) planets-forbidden :test #'equal)))
+      (cons (make-action :name 'Navigate-worm-whole
+                         :origin state
+                         :final (second aux)
+                         :cost (third aux))
+            (navigate-worm-hole state (rest worm-holes) planets-forbidden)))
+     (t (navigate-worm-hole state (rest worm-holes) planets-forbidden)))))
+
+
+(defun navigate (state wholes planets-forbidden)
+  (append (navigate-white-hole state wholes) (navigate-worm-hole state wholes planets-forbidden)))
 
 
 (navigate-worm-hole 'Mallory *worm-holes* *planets-forbidden*)  ;-> 
@@ -197,6 +224,7 @@
 
 
 (navigate-worm-hole 'Uranus *worm-holes* *planets-forbidden*)  ;-> NIL
+
 
 
 ;;
@@ -223,11 +251,21 @@
 ;;
 
 (defun f-goal-test-galaxy (node planets-destination planets-mandatory) 
-  ...)
+  (and
+   (find (node-state node) planets-destination :test #'equal)
+   (f-goal-test-galaxy-aux node planets-mandatory)))
+
+(defun f-goal-test-galaxy-aux (node planets-mandatory)
+  (if (null node)
+      (null planets-mandatory)
+    (f-goal-test-galaxy-aux (node-parent node)
+                            (remove (find (node-state node) planets-mandatory :test #'equal)
+                                    planets-mandatory :test #'equal))))
 
 
 (defparameter node-01
-   (make-node :state 'Avalon) )
+  (make-node :state 'Avalon) )
+(node-state node-01)
 (defparameter node-02
    (make-node :state 'Kentares :parent node-01))
 (defparameter node-03
@@ -246,35 +284,65 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; BEGIN: Exercise  -- Equal predicate for search states
+;;
+
+;; Con la funcion f-goal-test-galaxy-aux devolvemos la lista de los planetas obligados que quedan por visitar en ese estado.
+  
+
+(defun f-search-state-equal-galaxy (node-1 node-2 &optional planets-mandatory)
+  (cond 
+   ((null planets-mandatory) (equal (node-state node-1) (node-state node-2)))
+   (t (and (equal (node-state node-1) (node-state node-2)) 
+           (equal (f-goal-test-galaxy-aux node-1 planets-mandatory) (f-goal-test-galaxy-aux node-2 planets-mandatory))))))
+  
+       
+(f-search-state-equal-galaxy node-01 node-01) ;-> T
+(f-search-state-equal-galaxy node-01 node-02) ;-> NIL
+(f-search-state-equal-galaxy node-02 node-04) ;-> T
+
+(f-search-state-equal-galaxy node-01 node-01 '(Avalon)) ;-> T
+(f-search-state-equal-galaxy node-01 node-02 '(Avalon)) ;-> NIL
+(f-search-state-equal-galaxy node-02 node-04 '(Avalon)) ;-> T
+
+(f-search-state-equal-galaxy node-01 node-01 '(Avalon Katril)) ;-> T
+(f-search-state-equal-galaxy node-01 node-02 '(Avalon Katril)) ;-> NIL
+(f-search-state-equal-galaxy node-02 node-04 '(Avalon Katril)) ;-> NIL
+
+
+;;
+;; END: Exercise  -- Equal predicate for search states
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                     2. PROBLEM FORMALIZATION                        ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  BEGIN: Exercise 4 -- Define the galaxy structure
 ;;
-;; Create the galaxy structure
-;;
-;; STRUCTURE GALAXY-M35
-;;
-;;  Parameters:
-;;    camp1
-;;    camp2
 ;;
 (defparameter *galaxy-M35* 
   (make-problem 
-   :states            *planets*          
-   :initial-state     *planet-origin*
-   :f-goal-test       #'(lambda (node) 
-                          (f-goal-test-galaxy node *planets-destination*
-                                                   *planets-mandatory*))
-   :f-h               ...
-   :operators         (list ...))) 
+   :states               *planets*          
+   :initial-state        *planet-origin*
+   :f-h                  #'(lambda (state) (f-h-galaxy state *sensors*))
+   :f-goal-test          #'(lambda (node) (f-goal-test-galaxy node *planets-destination* *planets-mandatory*))
+   :f-search-state-equal #'(lambda (node-1 node-2) (f-search-state-equal-galaxy node-1 node-2 *planets-mandatory*))
+   :operators            (list 
+                          #'(lambda (state)(navigate-white-hole state *white-holes*))
+                          #'(lambda (state)(navigate-worm-hole state *worm-holes* *planets-forbidden*)))))
+
 
 ;;
 ;;  END: Exercise 4 -- Define the galaxy structure
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -286,15 +354,52 @@
 ;; EXPAND-NODE
 ;;
 ;;  Input:
-;;    node: 
-;;    problem: 
+;;    node: nodo a expandir
+;;    problem: problema que se quiere solucionar, en nuestro caso galaxy-M35
 ;;
 ;;  Returns:
-;;    
+;;    lista de nodos expandidos
 ;;
 
 (defun expand-node (node problem)
-  ...)
+  (if (funcall (problem-f-goal-test problem) node)
+      'final
+    (expand-node-aux node (build-actions node (problem-operators problem)) problem )))
+
+(defun build-actions (node act)
+  (if (null act)
+      nil
+    (append (funcall (first act) (node-state node)) (build-actions node (rest act)))))
+
+(build-actions (make-node :state 'Kentares :depth 0 :g 0 :f 0) (problem-operators *galaxy-M35*))
+
+(defun expand-node-aux (node list_actions problem)
+  (let ((action (first list_actions)))
+    (if (null list_actions)
+        nil
+      (let ((aux1 (action-final action))
+            (aux2 (action-cost action)))
+        (cons (make-node : state aux1
+                         : parent node
+                         : action action
+                         : depth (+ 1 (node-depth node))
+                         : g (+ (node-g node) aux2)
+                         : h (funcall (problem-f-h problem) aux1)
+                         : f (+ (+ (node-g node) aux2) (funcall (problem-f-h problem) aux1)))
+              (expand-node-aux node (rest list_actions) problem))))))
+
+
+
+(defparameter node-00
+ (make-node :state 'Proserpina :depth 12 :g 10 :f 20) )
+(defparameter lst-nodes-00
+ (expand-node node-00 *galaxy-M35*))
+(print lst-nodes-00)
+
+
+
+                            
+                            
 
 (expand-node (make-node :state 'Kentares :depth 0 :g 0 :f 0) *galaxy-M35*)
 ;;;(#S(NODE :STATE AVALON
@@ -370,8 +475,30 @@
 ;;  Returns:
 ;;    
 ;;
+
+(defun node-g-<= (node-1 node-2)
+  (<= (node-g node-1)
+      (node-g node-2)))
+
+(defparameter *uniform-cost*
+  (make-strategy
+   :name 'uniform-cost
+   :node-compare-p #'node-g-<=))
+
+
+
+(defun insert-nodes-strategy-aux (node lst-nodes strategy)
+  (cond
+   ((null lst-nodes) (list node))
+   ((funcall (strategy-node-compare-p strategy) node (first lst-nodes))
+    (cons node lst-nodes))
+   (t 
+    (cons (first lst-nodes) (insert-nodes-strategy-aux node (rest lst-nodes) strategy)))))
+
 (defun insert-nodes-strategy (nodes lst-nodes strategy)
-  ...)
+  (if (null nodes) 
+      lst-nodes
+    (insert-nodes-strategy (rest nodes) (insert-nodes-strategy-aux (first nodes) lst-nodes strategy) strategy)))
 
 
 (defparameter node-01
@@ -442,10 +569,16 @@
 ;; A strategy is, basically, a comparison function between nodes to tell 
 ;; us which nodes should be analyzed first. In the A* strategy, the first 
 ;; node to be analyzed is the one with the smallest value of g+h
-;;
+;;8
+
+(defun node-f-<= (node-1 node-2)
+  (<= (+ (node-g node-1) (node-h node-1))
+      (+ (node-g node-2) (node-h node-2))))
 
 (defparameter *A-star*
-  (make-strategy ...))
+  (make-strategy 
+   :name 'A-star
+   :node-compare-p #'node-f-<=))
 
 ;;
 ;; END: Exercise 7 -- Definition of the A* strategy
