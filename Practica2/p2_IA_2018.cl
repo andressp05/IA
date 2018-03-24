@@ -86,7 +86,7 @@
     (Mallory Katril 10) (Mallory Proserpina 15)
     (Katril Mallory 10) (Katril Davion 9)
     (Kentares Katril 10) (Kentares Avalon 3) (Kentares Proserpina 7)
-    (Proserpina Avalon 8.6) (Proserpina Mallory 15) (Proserpina Davion 5) (Proserpina Sirtis 12)
+    (Proserpina Avalon 8.6) (Proserpina Davion 5) (Proserpina Mallory 15) (Proserpina Sirtis 12)
     (Davion Proserpina 5) (Davion Sirtis 6)
     (Sirtis Davion 6) (Sirtis Proserpina 12)
     ))
@@ -97,7 +97,7 @@
     (Kentares Avalon 4) (Kentares Proserpina 12)
     (Mallory Avalon 9) (Mallory Katril 5) (Mallory Proserpina 11)
     (Katril Mallory 5) (Katril Davion 5) (Katril Sirtis 10)
-    (Proserpina Mallory 11) (Proserpina Kentares 12) (Proserpina Sirtis 9)
+    (Proserpina Kentares 12) (Proserpina Mallory 11) (Proserpina Sirtis 9)
     (Sirtis Katril 10) (Sirtis Davion 8) (Sirtis Proserpina 9)
     ))
  
