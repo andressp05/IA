@@ -391,9 +391,10 @@
 
 
 (defparameter node-00
- (make-node :state 'Proserpina :depth 12 :g 10 :f 20) )
+  (make-node :state 'Proserpina :depth 12 :g 10 :f 20) )
+
 (defparameter lst-nodes-00
- (expand-node node-00 *galaxy-M35*))
+ (expand-node node-03 *galaxy-M35*))
 (print lst-nodes-00)
 
 
@@ -504,7 +505,7 @@
 (defparameter node-01
    (make-node :state 'Avalon :depth 0 :g 0 :f 0) )
 (defparameter node-02
-   (make-node :state 'Kentares :depth 2 :g 50 :f 50) )
+  (make-node :state 'Kentares :depth 2 :g 50 :f 50) )
 
 (print (insert-nodes-strategy (list node-00 node-01 node-02) 
                         lst-nodes-00 
@@ -606,7 +607,43 @@
 ;;
 
 (defun graph-search (problem strategy)
-  ...)
+  (let ((state (problem-initial-state problem)))
+    (graph-search-aux problem strategy (list (make-node :state state
+                                                       :parent nil
+                                                       :action nil))
+                      nil)))
+
+(defun find-duplicates (node list problem)
+  (let ((aux (first list)))
+    (cond
+     ((null list) nil)
+     ((funcall (problem-f-search-state-equal problem) node aux) aux)
+     (t (find-duplicates node (rest list) problem)))))
+
+(defparameter node-03
+   (make-node :state 'Mallory :depth 0 :g 0 :f 0) )
+(find-duplicates node-03 (list node-03) *galaxy-M35*)
+
+
+(defun graph-search-aux (problem strategy open-nodes closed-nodes)
+  (unless (null open-nodes))
+  (let ((actual (first open-nodes))
+        (rep (find-duplicates (first open-nodes) closed-nodes problem)))
+    (cond
+     ((funcall (problem-f-goal-test problem) actual)
+      actual)
+     ((or (equal rep nil) (<= (node-g actual) (node-g rep)))
+      (graph-search-aux problem 
+                        strategy
+                        (insert-nodes-strategy (expand-node actual problem) (rest open-nodes) strategy)
+                        (cons actual closed-nodes)))
+     (t (graph-search-aux problem
+                         strategy
+                         (rest open-nodes)
+                         closed-nodes)))))
+      
+    
+                                                   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; A-STAR-SEARCH
@@ -621,7 +658,8 @@
 ;
 ;  Solve a problem using the A* strategy
 ;
-(defun a-star-search (problem)...)
+(defun a-star-search (problem)
+  (graph-search problem *A-star*))
 
 
 (graph-search *galaxy-M35* *A-star*);->
