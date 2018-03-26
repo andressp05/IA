@@ -700,7 +700,7 @@
 (defun solution-path (node)
   (if (null node)
       nil
-    (cons (node-state node) (solution-path (node-parent node)))))
+    (append (solution-path (node-parent node)) (list (node-state node)))))
 
 (solution-path nil) ;;; -> NIL 
 (solution-path (a-star-search *galaxy-M35*))  ;;;-> (MALLORY ...)
