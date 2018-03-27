@@ -158,17 +158,18 @@
 ;;
 ;;  Input:
 ;;    state: the current state (vis. the planet we are on)
-;;    white-holes: 
+;;    white-holes: list of all white-holes
 ;;
 ;;  Returns:
-;;    
+;;    A specified list with Navigate-white-whole as name,
+;;    the state as origin and a final node with his cost associated
 ;;
 
 (defun navigate-white-hole (state white-holes)
   (let ((aux (first white-holes)))
     (cond
      ((null white-holes) nil)
-     ((equal (first aux) state) (cons (make-action : name 'Navigate-white-whole
+     ((equal (first aux) state) (cons (make-action :name 'Navigate-white-whole
                                                    :origin state
                                                    :final (second aux)
                                                    :cost (third aux))
@@ -183,11 +184,12 @@
 ;;
 ;;  Input:
 ;;    state: the current state (vis. the planet we are on)
-;;    worm-holes: 
-;;    planets-forbidden: 
+;;    worm-holes: list of all worm-holes
+;;    planets-forbidden: list of forbidden planets
 ;;
 ;;  Returns:
-;;    
+;;    A specified list with Navigate-worm-whole as name,
+;;    the state as origin and a final node with his cost associated
 ;;
 
 (defun navigate-worm-hole (state worm-holes planets-forbidden)
@@ -235,16 +237,16 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; BEGIN: Exercise 3 -- Goal test
+;; BEGIN: Exercise 3A -- Goal test
 ;;
 ;; Returns wheter the goal is reached or not
 ;;
 ;; F-GOAL-TEST-GALAXY
 ;;
 ;;  Input:
-;;    node: 
-;;    planets-destination: 
-;;    planets-mandatory: 
+;;    node: origin node
+;;    planets-destination: list of all destinations planets 
+;;    planets-mandatory: list of planets that can´t be used
 ;;
 ;;  Returns:
 ;;    T if is reached or NIL if not
@@ -279,13 +281,25 @@
 
 
 ;;
-;; END: Exercise 3 -- Goal test
+;; END: Exercise 3A -- Goal test
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; BEGIN: Exercise  -- Equal predicate for search states
+;; BEGIN: Exercise 3B  -- Equal predicate for search states
+;;
+;; Returns wheter the search-state is repeated or not
+;;
+;; F-SEARCH-STATE-EQUAL-GALAXY
+;;
+;;  Input:
+;;    node-1: first node of the comparison
+;;    node-2: second node of the comparison
+;;    planets-mandatory: list of planets that can´t be used 
+;;
+;;  Returns:
+;;    T if is repeated or NIL if not
 ;;
 
 ;; Con la funcion f-goal-test-galaxy-aux devolvemos la lista de los planetas obligados que quedan por visitar en ese estado.
@@ -312,7 +326,7 @@
 
 
 ;;
-;; END: Exercise  -- Equal predicate for search states
+;; END: Exercise 3B  -- Equal predicate for search states
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -326,6 +340,7 @@
 ;;  BEGIN: Exercise 4 -- Define the galaxy structure
 ;;
 ;;
+
 (defparameter *galaxy-M35* 
   (make-problem 
    :states               *planets*          
@@ -354,11 +369,11 @@
 ;; EXPAND-NODE
 ;;
 ;;  Input:
-;;    node: nodo a expandir
-;;    problem: problema que se quiere solucionar, en nuestro caso galaxy-M35
+;;    node: expanded node
+;;    problem: problem that we want resolve (galaxy-M35 in our case)
 ;;
 ;;  Returns:
-;;    lista de nodos expandidos
+;;    expanded nodes' list
 ;;
 
 (defun expand-node (node problem)
@@ -395,12 +410,7 @@
 
 (defparameter lst-nodes-00
  (expand-node node-03 *galaxy-M35*))
-(print lst-nodes-00)
-
-
-
-                            
-                            
+(print lst-nodes-00)              
 
 (expand-node (make-node :state 'Kentares :depth 0 :g 0 :f 0) *galaxy-M35*)
 ;;;(#S(NODE :STATE AVALON
@@ -461,20 +471,20 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;  BEGIN Exercise 6 -- Node list management
+;;
+;;  BEGIN Exercise 6 -- Node list management
 ;;
 ;;  Inserts a list of nodes into another list of nodes
 ;;
 ;; INSERT-NODES-STRATEGY
 ;;
 ;;  Input:
-;;    nodes: 
-;;    lst-nodes: 
-;;    strategy: 
+;;    node: one of our list of nodes
+;;    lst-nodes: ordered list of nodes
+;;    strategy: strategy used to put lists in order.
 ;;
 ;;  Returns:
-;;    
+;;    an ordered list with all nodes
 ;;
 
 (defun node-g-<= (node-1 node-2)
@@ -570,7 +580,7 @@
 ;; A strategy is, basically, a comparison function between nodes to tell 
 ;; us which nodes should be analyzed first. In the A* strategy, the first 
 ;; node to be analyzed is the one with the smallest value of g+h
-;;8
+;;
 
 (defun node-f-<= (node-1 node-2)
   (<= (+ (node-g node-1) (node-h node-1))
@@ -592,18 +602,19 @@
 ;; 
 ;;    BEGIN Exercise 8: Search algorithm
 ;;
-;; descripcion generica
+;; Do a search for the problem with a specifical strategy
 ;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; GRAPH-SEARCH
 ;;
 ;;  Input:
-;;    problem:  
-;;    strategy: 
+;;    problem:  the problem that we will try to resolve
+;;    strategy: strategy used to resolve the problem
 ;;
 ;;  Returns:
-;;    
+;;    If there is no solution, returns NIL
+;;    if not, a node that satisfied the goal test
 ;;
 
 (defun graph-search (problem strategy)
@@ -649,15 +660,13 @@
 ;; A-STAR-SEARCH
 ;;
 ;;  Input:
-;;    problem:  
-;;    strategy: 
+;;    problem: the problem that we will try to resolve with A-STAR-SEARCH
 ;;
 ;;  Returns:
-;;    
+;;    If there is no solution, returns NIL
+;;    if not, a node that satisfied the goal test
 ;;
-;
-;  Solve a problem using the A* strategy
-;
+
 (defun a-star-search (problem)
   (graph-search problem *A-star*))
 
@@ -745,6 +754,9 @@
 (defun depth-first-node-compare-p (node-1 node-2)
   ...)
 
+(defun depth-first-search (problem)
+  (graph-search problem *depth-first*))
+
 (solution-path (graph-search *galaxy-M35* *depth-first*))
 ;;; -> (MALLORY ... )
 
@@ -759,6 +771,9 @@
 
 (defun breadth-first-node-compare-p (node-1 node-2)
   ...)
+
+(defun breadth-first-search (problem)
+  (graph-search problem *breadth-first*))
 
 (solution-path (graph-search *galaxy-M35* *breadth-first*))
 ;; -> (MALLORY ... )
