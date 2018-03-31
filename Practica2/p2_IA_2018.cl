@@ -724,8 +724,10 @@
 ;;    
 ;;
 
-(defun action-sequence-aux (node)
-  ...)
+(defun action-sequence (node)
+  (if (null node)
+      nil
+    (append (action-sequence (node-parent node)) (list (node-action node)))))
 
 (action-sequence (a-star-search *galaxy-M35*))
 ;;; ->
