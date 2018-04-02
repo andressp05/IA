@@ -246,7 +246,7 @@
 ;;  Input:
 ;;    node: origin node
 ;;    planets-destination: list of all destinations planets 
-;;    planets-mandatory: list of planets that can´t be used
+;;    planets-mandatory: list of planets that should be used
 ;;
 ;;  Returns:
 ;;    T if is reached or NIL if not
@@ -296,7 +296,7 @@
 ;;  Input:
 ;;    node-1: first node of the comparison
 ;;    node-2: second node of the comparison
-;;    planets-mandatory: list of planets that can´t be used 
+;;    planets-mandatory: list of planets that should be used 
 ;;
 ;;  Returns:
 ;;    T if is repeated or NIL if not
@@ -694,16 +694,16 @@
 ;; 
 ;;    BEGIN Exercise 9: Solution path / action sequence
 ;;
-;; descripcion generica
+;; It shows the states visited and actions' sequence
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; SOLUTION-PATH
 ;;
 ;;  Input:
-;;    node:
+;;    node: destination node
 ;;
 ;;  Returns:
-;;    
+;;    List of diferents planets that have been visited
 ;;
 
 (defun solution-path (node)
@@ -715,13 +715,13 @@
 (solution-path (a-star-search *galaxy-M35*))  ;;;-> (MALLORY ...)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ACTION-SEQUENCE-AUX
+;; ACTION-SEQUENCE
 ;;
 ;;  Input:
-;;    node: 
+;;    node: destination node
 ;;
 ;;  Returns:
-;;    
+;;    List of actions that have been done
 ;;
 
 (defun action-sequence (node)
