@@ -132,8 +132,8 @@
 ;;    The cost (a number) or NIL if the state is not in the sensor list
 ;;
 
-(defun f-h-galaxy (state sensors)  
-  (second (assoc state sensors)))
+(defun f-h-galaxy (state sensors)  ; assoc es una funcion que nos devuelve el primer par cuyo 
+  (second (assoc state sensors)))  ; primera coordenada coincida con el valor que queramos
 
 (f-h-galaxy 'Sirtis *sensors*) ;-> 0
 (f-h-galaxy 'Avalon *sensors*) ;-> 15
@@ -165,15 +165,15 @@
 ;;    the state as origin and a final node with his cost associated
 ;;
 
-(defun navigate-white-hole (state white-holes)
+(defun navigate-white-hole (state white-holes)  ; white holes es una tripleta de la forma (origen, destino, coste)
   (let ((aux (first white-holes)))
     (cond
      ((null white-holes) nil)
-     ((equal (first aux) state) (cons (make-action :name 'Navigate-white-whole
-                                                   :origin state
+     ((equal (first aux) state) (cons (make-action :name 'Navigate-white-whole   ; Si el planeta origen concide con state generamos la acción que va desde
+                                                   :origin state                 ; ese planeta hasta el destino con su coste 
                                                    :final (second aux)
                                                    :cost (third aux))
-                                      (navigate-white-hole state (rest white-holes))))
+                                      (navigate-white-hole state (rest white-holes))))  ;Llamada recursiva para ir recorriendo todos los white holes
      (t (navigate-white-hole state (rest white-holes))))))
 
         
@@ -192,18 +192,22 @@
 ;;    the state as origin and a final node with his cost associated
 ;;
 
-(defun navigate-worm-hole (state worm-holes planets-forbidden)
+(defun navigate-worm-hole (state worm-holes planets-forbidden) ; worm holes es una tripleta de la forma (origen, destino, coste)
   (let ((aux (first worm-holes)))
     (cond
      ((null worm-holes) nil)
-     ((and (equal (first aux) state) (not(find (second aux) planets-forbidden :test #'equal)))
-      (cons (make-action :name 'Navigate-worm-whole
+     ((and (equal (first aux) state) (not(find (second aux) planets-forbidden :test #'equal)))  ;Comprobamos que el planeta origen y el estado actual es el mismo
+      (cons (make-action :name 'Navigate-worm-whole                                             ; y que que el estado destino no se encuentre entre los prohibidos
                          :origin state
-                         :final (second aux)
+                         :final (second aux)                                                    ;Si ocurre contruimos una accion y hacemos la llamada recursiva
                          :cost (third aux))
             (navigate-worm-hole state (rest worm-holes) planets-forbidden)))
-     (t (navigate-worm-hole state (rest worm-holes) planets-forbidden)))))
+     (t (navigate-worm-hole state (rest worm-holes) planets-forbidden)))))                      ;En caso contrario, solo hacemos la llamada recursiva
 
+
+
+;Funcion que se encarga de llamar a las dos anteriores y concatenar sus resultados. De esta forma tenemos una funcion que a partir de un estado nos construye 
+;todos las posibles acciones a realizar.
 
 (defun navigate (state wholes planets-forbidden)
   (append (navigate-white-hole state wholes) (navigate-worm-hole state wholes planets-forbidden)))
@@ -254,15 +258,17 @@
 
 (defun f-goal-test-galaxy (node planets-destination planets-mandatory) 
   (and
-   (find (node-state node) planets-destination :test #'equal)
-   (f-goal-test-galaxy-aux node planets-mandatory)))
+   (find (node-state node) planets-destination :test #'equal) ; Si el estado del nodo actual coincide con el del nodo final
+   (f-goal-test-galaxy-aux node planets-mandatory)))          ; Se han pasado por todos los planetas obligatorios
+
+;Funcion auxiliar que nos sirve para comprobar que se pasan por todos los planetas obligatorios
 
 (defun f-goal-test-galaxy-aux (node planets-mandatory)
-  (if (null node)
+  (if (null node) ; Si el nodo es nil comprobamos si la lista de planetas obligatorios esta vacia 
       (null planets-mandatory)
-    (f-goal-test-galaxy-aux (node-parent node)
-                            (remove (find (node-state node) planets-mandatory :test #'equal)
-                                    planets-mandatory :test #'equal))))
+    (f-goal-test-galaxy-aux (node-parent node)    ;Nos movemos recursivamente con por los nodos padres (partiendo del actual)
+                            (remove (find (node-state node) planets-mandatory :test #'equal) ;Si encontramos que un nodo padre es un nodo obligatorio,
+                                    planets-mandatory :test #'equal))))                      ; este ya no le tendremos en cuenta (lo eliminamos)
 
 
 (defparameter node-01
@@ -304,12 +310,13 @@
 
 ;; Con la funcion f-goal-test-galaxy-aux devolvemos la lista de los planetas obligados que quedan por visitar en ese estado.
   
-
+; Funcion que comprueba si dos nodos son iguales. Lo son es caso de que se cumplan 1 y 2
 (defun f-search-state-equal-galaxy (node-1 node-2 &optional planets-mandatory)
   (cond 
    ((null planets-mandatory) (equal (node-state node-1) (node-state node-2)))
-   (t (and (equal (node-state node-1) (node-state node-2)) 
-           (equal (f-goal-test-galaxy-aux node-1 planets-mandatory) (f-goal-test-galaxy-aux node-2 planets-mandatory))))))
+   (t (and (equal (node-state node-1) (node-state node-2))                       ; 1. Los estados sean los mismos
+           (equal (f-goal-test-galaxy-aux node-1 planets-mandatory) (f-goal-test-galaxy-aux node-2 planets-mandatory)))))) ; 2. Los planetas obligatorios que quedan
+                                                                                                                           ; por visitar en ambos nodos son los mismos
   
        
 (f-search-state-equal-galaxy node-01 node-01) ;-> T
@@ -340,6 +347,8 @@
 ;;  BEGIN: Exercise 4 -- Define the galaxy structure
 ;;
 ;;
+
+;Definición del problema. A partir de ahora todas las funciones van a depender del problema que se define a continuacion
 
 (defparameter *galaxy-M35* 
   (make-problem 
@@ -376,11 +385,14 @@
 ;;    expanded nodes' list
 ;;
 
+;Repartimos el trabajo en tres funciones
+
 (defun expand-node (node problem)
   (if (funcall (problem-f-goal-test problem) node)
       'final
     (expand-node-aux node (build-actions node (problem-operators problem)) problem )))
 
+;Construye una lista con todas las acciones con el nodo y las funciones de expansion (en nuestro caso navigate-white-holes y navigate-worm-holes)
 (defun build-actions (node act)
   (if (null act)
       nil
@@ -388,20 +400,20 @@
 
 (build-actions (make-node :state 'Kentares :depth 0 :g 0 :f 0) (problem-operators *galaxy-M35*))
 
-(defun expand-node-aux (node list_actions problem)
+(defun expand-node-aux (node list_actions problem) ;list_actions son todas las acciones generadas por build-actions
   (let ((action (first list_actions)))
-    (if (null list_actions)
+    (if (null list_actions)                                        ; Si nos quedam mas acciones paramos
         nil
       (let ((aux1 (action-final action))
             (aux2 (action-cost action)))
-        (cons (make-node : state aux1
-                         : parent node
-                         : action action
-                         : depth (+ 1 (node-depth node))
-                         : g (+ (node-g node) aux2)
-                         : h (funcall (problem-f-h problem) aux1)
-                         : f (+ (+ (node-g node) aux2) (funcall (problem-f-h problem) aux1)))
-              (expand-node-aux node (rest list_actions) problem))))))
+        (cons (make-node : state aux1                              ; En caso de que queden acciones, creamos nodos a partir de estas
+                         : parent node                             ; Como expandimos node, ese sera su padre
+                         : action action                           ; La accion es la propia accion
+                         : depth (+ 1 (node-depth node))           ; La profundidad sera la profundidad del padre mas 1
+                         : g (+ (node-g node) aux2)                ; g = (g del nodo padre) + (coste de la accion)
+                         : h (funcall (problem-f-h problem) aux1)  ; h = calculamos la heuristica con la funcion del ej 1
+                         : f (+ (+ (node-g node) aux2) (funcall (problem-f-h problem) aux1))) ;f = g + h
+              (expand-node-aux node (rest list_actions) problem)))))) ;LLamada recursiva para avanzar sobre las acciones
 
 
 
@@ -409,7 +421,7 @@
   (make-node :state 'Proserpina :depth 12 :g 10 :f 20) )
 
 (defparameter lst-nodes-00
- (expand-node node-03 *galaxy-M35*))
+ (expand-node node-00 *galaxy-M35*))
 (print lst-nodes-00)              
 
 (expand-node (make-node :state 'Kentares :depth 0 :g 0 :f 0) *galaxy-M35*)
@@ -497,15 +509,16 @@
    :node-compare-p #'node-g-<=))
 
 
-
+;Funcion que inserta un nodo de forma ordenada en la lista de nodos
 (defun insert-nodes-strategy-aux (node lst-nodes strategy)
   (cond
-   ((null lst-nodes) (list node))
-   ((funcall (strategy-node-compare-p strategy) node (first lst-nodes))
-    (cons node lst-nodes))
-   (t 
-    (cons (first lst-nodes) (insert-nodes-strategy-aux node (rest lst-nodes) strategy)))))
+   ((null lst-nodes) (list node))                                                            ; Si la lista de nodos en nil devolvemos lista con el nodo
+   ((funcall (strategy-node-compare-p strategy) node (first lst-nodes))                      ; Comparamos el nodo con el primero de la lista
+    (cons node lst-nodes))                                                                   ; Si la comparacion devuleve true metemos el nodo en esa posicion
+   (t                                                                                        ; En otro caso, metemos el primero de la lista concatenado
+    (cons (first lst-nodes) (insert-nodes-strategy-aux node (rest lst-nodes) strategy)))))   ; con la lista en la que ya se ha insertado el nodo
 
+;Funcion que inserta una lista de nodos en el lugar que les corresponda segun la estrategia (en nuestro caso ordenados por f)
 (defun insert-nodes-strategy (nodes lst-nodes strategy)
   (if (null nodes) 
       lst-nodes
@@ -582,6 +595,7 @@
 ;; node to be analyzed is the one with the smallest value of g+h
 ;;
 
+;Definimos la estrategia f, que consiste en f = g + h
 (defun node-f-<= (node-1 node-2)
   (<= (+ (node-g node-1) (node-h node-1))
       (+ (node-g node-2) (node-h node-2))))
@@ -617,41 +631,43 @@
 ;;    if not, a node that satisfied the goal test
 ;;
 
+;Funcion que crea las condiciones iniciales de busqueda y llama a la verdadera funcions de buscar graph-search
 (defun graph-search (problem strategy)
   (let ((state (problem-initial-state problem)))
-    (graph-search-aux problem strategy (list (make-node :state state
-                                                       :parent nil
+    (graph-search-aux problem strategy (list (make-node :state state    ; Lista abierta que son los nodos a expandir en orden (ordenados por f)
+                                                       :parent nil      ; Inicialmente tiene solo el nodo inicial del problema
                                                        :action nil))
-                      nil)))
+                      nil)))                                            ;Lista cerrada con los nodos ya visitados. Inicialmente vacia
 
+;Funcion que nos sirve para ver si un nodo ya se encunetra en la lista de cerrados.
 (defun find-duplicates (node list problem)
   (let ((aux (first list)))
     (cond
      ((null list) nil)
-     ((funcall (problem-f-search-state-equal problem) node aux) aux)
-     (t (find-duplicates node (rest list) problem)))))
+     ((funcall (problem-f-search-state-equal problem) node aux) aux)  ; LLamada a la funcion que determina si dos funciones son iguales.
+     (t (find-duplicates node (rest list) problem)))))              
 
 (defparameter node-03
    (make-node :state 'Mallory :depth 0 :g 0 :f 0) )
 (find-duplicates node-03 (list node-03) *galaxy-M35*)
 
 
-(defun graph-search-aux (problem strategy open-nodes closed-nodes)
-  (unless (null open-nodes))
+(defun graph-search-aux (problem strategy open-nodes closed-nodes) ;open-nodes := lista de nodos a explorar ordenados por su f
+  (unless (null open-nodes)                                        ;closed-nodes:=lista de nodos explorados
   (let ((actual (first open-nodes))
         (rep (find-duplicates (first open-nodes) closed-nodes problem)))
     (cond
-     ((funcall (problem-f-goal-test problem) actual)
+     ((funcall (problem-f-goal-test problem) actual)  ;Si el nodo actual es el final lo devolvemos
       actual)
-     ((or (equal rep nil) (<= (node-g actual) (node-g rep)))
-      (graph-search-aux problem 
+     ((or (equal rep nil) (<= (node-g actual) (node-g rep))) ;nodo no explorado o si lo esta, y su g es menor que el que esta en la lista de cerrados, hacemos:
+      (graph-search-aux problem                              ; 1. expandimos el nodo y metemos sus vecinos en orden en open-nodes
                         strategy
                         (insert-nodes-strategy (expand-node actual problem) (rest open-nodes) strategy)
-                        (cons actual closed-nodes)))
+                        (cons actual closed-nodes)))  ;2. metemos en nodo actual en los nodos explorados
      (t (graph-search-aux problem
-                         strategy
+                         strategy                     ; En caso de que no se expanda el nodo, solo llamamos a buscar con el resto de nodos de la lista abierta
                          (rest open-nodes)
-                         closed-nodes)))))
+                         closed-nodes))))))
       
     
                                                    
@@ -706,6 +722,7 @@
 ;;    List of diferents planets that have been visited
 ;;
 
+;Imprime el camino hasta el nodo final, metiendo en una lista todos los padres recursivamente
 (defun solution-path (node)
   (if (null node)
       nil
@@ -724,6 +741,7 @@
 ;;    List of actions that have been done
 ;;
 
+;Imprime las acciones del camino hasta el nodo final, metiendo en una lista todas las acciones recursivamente
 (defun action-sequence (node)
   (if (null node)
       nil
@@ -748,9 +766,12 @@
 ;;                         DEPTH-FIRST STRATEGY                         ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;Si expandimos el nodo A y metemos todos sus vecinos al principio de la lista de open-nodes, damos preferencia a estos respecto del resto.
+;De esta manera se consigue busqueda en profundidad
 (defun depth-first-node-compare-p (node-1 node-2)
   T)
 
+;Es la misma forma que la primera pero de forma mas intuitiva
 (defun depth-first-node-compare-p (node-1 node-2)
   (>= (node-depth node-1)
       (node-depth node-2)))
@@ -769,9 +790,12 @@
 ;;                        BREADTH-SEARCH STRATEGY                       ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;Si expandimos en nodo A y metemos sus vecinos al final damos preferencia a los nodoos ya explorados y, por tanto de menor profundidad
+; De esta forma conseguimos busqueda en anchura
 (defun breadth-first-node-compare-p (node-1 node-2)
   NIL)
 
+;Es la misma forma, pero de forma mas intuitiva
 (defun breadth-first-node-compare-p (node-1 node-2)
   (<= (node-depth node-1)
       (node-depth node-2)))
