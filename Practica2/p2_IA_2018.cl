@@ -754,7 +754,8 @@
    :node-compare-p #'depth-first-node-compare-p))
 
 (defun depth-first-node-compare-p (node-1 node-2)
-  ...)
+  (>= (node-depth node-1)
+      (node-depth node-2)))
 
 (defun depth-first-search (problem)
   (graph-search problem *depth-first*))
@@ -772,7 +773,8 @@
    :node-compare-p #'breadth-first-node-compare-p))
 
 (defun breadth-first-node-compare-p (node-1 node-2)
-  ...)
+  (<= (node-depth node-1)
+      (node-depth node-2)))
 
 (defun breadth-first-search (problem)
   (graph-search problem *breadth-first*))
