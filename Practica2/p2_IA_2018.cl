@@ -748,40 +748,44 @@
 ;;                         DEPTH-FIRST STRATEGY                         ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defparameter *depth-first*
-  (make-strategy
-   :name 'depth-first
-   :node-compare-p #'depth-first-node-compare-p))
+(defun depth-first-node-compare-p (node-1 node-2)
+  T)
 
 (defun depth-first-node-compare-p (node-1 node-2)
   (>= (node-depth node-1)
       (node-depth node-2)))
 
+(defparameter *depth-first*
+  (make-strategy
+   :name 'depth-first
+   :node-compare-p #'depth-first-node-compare-p))
+
 (defun depth-first-search (problem)
   (graph-search problem *depth-first*))
 
 (solution-path (graph-search *galaxy-M35* *depth-first*))
-;;; -> (MALLORY ... )
-
+;;; -> (MALLORY PROSERPINA SIRTIS DAVION KATRIL SIRTIS)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                        BREADTH-SEARCH STRATEGY                       ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun breadth-first-node-compare-p (node-1 node-2)
+  NIL)
+
+(defun breadth-first-node-compare-p (node-1 node-2)
+  (<= (node-depth node-1)
+      (node-depth node-2)))
 
 (defparameter *breadth-first*
   (make-strategy
    :name 'breadth-first
    :node-compare-p #'breadth-first-node-compare-p))
 
-(defun breadth-first-node-compare-p (node-1 node-2)
-  (<= (node-depth node-1)
-      (node-depth node-2)))
-
 (defun breadth-first-search (problem)
   (graph-search problem *breadth-first*))
 
 (solution-path (graph-search *galaxy-M35* *breadth-first*))
-;; -> (MALLORY ... )
-
+;; -> (MALLORY KATRIL DAVION PROSERPINA SIRTIS)
 ;;; 
 ;;;    END Exercise 10: depth-first / breadth-first
 ;;;
