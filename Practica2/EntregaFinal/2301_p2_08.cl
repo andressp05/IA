@@ -259,13 +259,13 @@
 (defun f-goal-test-galaxy (node planets-destination planets-mandatory) 
   (and
    (find (node-state node) planets-destination :test #'equal) ; Si el estado del nodo actual coincide con el del nodo final
-   (f-goal-test-galaxy-aux node planets-mandatory)))          ; Se han pasado por todos los planetas obligatorios
+   (equal nil (f-goal-test-galaxy-aux node planets-mandatory))))          ; Se han pasado por todos los planetas obligatorios
 
 ;Funcion auxiliar que nos sirve para comprobar que se pasan por todos los planetas obligatorios
 
 (defun f-goal-test-galaxy-aux (node planets-mandatory)
-  (if (null node) ; Si el nodo es nil comprobamos si la lista de planetas obligatorios esta vacia 
-      (null planets-mandatory)
+  (if (null node) ; Si el nodo es nil devolvemos la lisa vacia 
+      planets-mandatory
     (f-goal-test-galaxy-aux (node-parent node)    ;Nos movemos recursivamente con por los nodos padres (partiendo del actual)
                             (remove (find (node-state node) planets-mandatory :test #'equal) ;Si encontramos que un nodo padre es un nodo obligatorio,
                                     planets-mandatory :test #'equal))))                      ; este ya no le tendremos en cuenta (lo eliminamos)
@@ -315,10 +315,9 @@
   (cond 
    ((null planets-mandatory) (equal (node-state node-1) (node-state node-2)))
    (t (and (equal (node-state node-1) (node-state node-2))                       ; 1. Los estados sean los mismos
-           (equal (f-goal-test-galaxy-aux node-1 planets-mandatory) (f-goal-test-galaxy-aux node-2 planets-mandatory)))))) ; 2. Los planetas obligatorios que quedan
-                                                                                                                           ; por visitar en ambos nodos son los mismos
+           (equal nil (set-exclusive-or (f-goal-test-galaxy-aux node-1 planets-mandatory) (f-goal-test-galaxy-aux node-2 planets-mandatory))))))) 
+           ; 2. Los planetas obligatorios que quedan por visitar en ambos nodos son los mismo conjunto
   
-       
 (f-search-state-equal-galaxy node-01 node-01) ;-> T
 (f-search-state-equal-galaxy node-01 node-02) ;-> NIL
 (f-search-state-equal-galaxy node-02 node-04) ;-> T
@@ -597,7 +596,7 @@
 
 ;Definimos la estrategia f, que consiste en f = g + h
 (defun node-f-<= (node-1 node-2)
-  (<= (+ (node-g node-1) (node-h node-1))
+  (< (+ (node-g node-1) (node-h node-1))
       (+ (node-g node-2) (node-h node-2))))
 
 (defparameter *A-star*
