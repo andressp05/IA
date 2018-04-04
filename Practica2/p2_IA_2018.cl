@@ -315,17 +315,8 @@
   (cond 
    ((null planets-mandatory) (equal (node-state node-1) (node-state node-2)))
    (t (and (equal (node-state node-1) (node-state node-2))                       ; 1. Los estados sean los mismos
-           (our-equal (f-goal-test-galaxy-aux node-1 planets-mandatory) (f-goal-test-galaxy-aux node-2 planets-mandatory)))))) 
+           (equal nil (set-exclusive-or (f-goal-test-galaxy-aux node-1 planets-mandatory) (f-goal-test-galaxy-aux node-2 planets-mandatory))))))) 
            ; 2. Los planetas obligatorios que quedan por visitar en ambos nodos son los mismo conjunto
-
-; Definimos la igualdad de conjuntos
-(defun our-equal (l1 l2)
-  (and (contenido l1 l2) (contenido l2 l1)))
-
-(defun contenido (l1 l2)
-  (if (null l1)
-      t
-    (and (find (first l1) l2) (contenido (rest l1) l2))))
   
 (f-search-state-equal-galaxy node-01 node-01) ;-> T
 (f-search-state-equal-galaxy node-01 node-02) ;-> NIL
