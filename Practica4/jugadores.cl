@@ -196,3 +196,101 @@
 ;;;(partida 0 2 (list *jdr-humano*      *jdr-1st-opt*))
 ;;;(partida 0 2 (list *jdr-humano*      *jdr-last-opt*))
 ;;;(partida 0 2 (list *jdr-humano*      *jdr-human2*))
+
+
+;;; NUESTROS JUGADORES, PONDREMOS EL MEJOR DE CADA VARIANTE AQUI
+;;; EL ALIAS DE CADA JUGADOR NUESTRO SERA FechaSubida (1604, 1704, ...)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Mejor Jugador 1604
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar *alias* '|Riosal3.0|) ; alias que aparecerá en el ranking
+
+(defun heuristica1604 (estado)
+  (+ (heuristica-aux estado) (casillas-nulas (estado-tablero estado) (estado-lado-sgte-jugador estado) 5) (turnos-adicionales estado)))
+
+(defun heuristica-aux (estado)
+  (+
+   (* 6 (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 0))
+   (* 5 (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 1))
+   (* 4 (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 2))
+   (* -3 (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 3))   
+   (* -4 (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 4))
+   (* -5 (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 5))))
+
+(defun casillas-nulas (tablero lado pos)   ; funciones auxiliares usadas por heurística
+  (cond 
+   ((< pos 3) 0)
+   ((equal 0 (get-fichas tablero lado pos)) (+ 1 (casillas-nulas tablero lado (- pos 1))))
+   (t (casillas-nulas tablero lado (- pos 1)))))
+
+(defun turnos-adicionales (estado)
+  (if (equal t (estado-debe-pasar-turno estado))
+      3
+    0))
+
+(defvar *1604* (make-jugador
+                        :nombre   '|1604|
+                        :f-juego  #'f-j-nmx
+                        :f-eval   #'heuristica1604))                   
+                   
+(setq *1604* (make-jugador
+                        :nombre   '|1604|
+                        :f-juego  #'f-j-nmx
+                        :f-eval   #'heuristica1604))  
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Mejor Jugador 1704
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar *alias* '|AitanaWar|) ; alias que aparecerá en el ranking
+
+(defun heuristica1704 (estado)
+  (+ (our-pesc-map (list-lado estado (estado-lado-sgte-jugador estado))
+                   '(0 1 2 3 4 5))
+     (our-pesc-map (list-lado estado (lado-contrario (estado-lado-sgte-jugador estado)))
+                '(5 4 3 2 1 0))))
+
+(defun our-pesc-map (lista1 lista2)
+  (reduce '+ (mapcar #'* lista1 lista2)))
+
+(defvar *1704* (make-jugador
+                        :nombre   '|1704|
+                        :f-juego  #'f-j-nmx
+                        :f-eval   #'heuristica1704))                   
+                   
+(setq *1704* (make-jugador
+                        :nombre   '|1704|
+                        :f-juego  #'f-j-nmx
+                        :f-eval   #'heuristica1704))
+
+(partida 1 2 (list *1704* *jdr-nmx-bueno*))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Jugador Pruebas
+;;; SE IRA CAMBIANDO
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar *alias* '|ejemplo|) ; alias que aparecerá en el ranking
+
+(defun heuristica (estado)
+  (+ (our-pesc-map (list-lado estado (estado-lado-sgte-jugador estado))
+                   '(0 1 2 4 8 16))
+     (our-pesc-map (list-lado estado (lado-contrario (estado-lado-sgte-jugador estado)))
+                   '(16 8 4 2 1 0))))
+  
+(defun our-pesc-map (lista1 lista2)
+  (reduce '+ (mapcar #'* lista1 lista2)))
+
+(defvar *ejemplo* (make-jugador
+                        :nombre   '|ejemplo|
+                        :f-juego  #'f-j-nmx
+                        :f-eval   #'heuristica))                   
+                   
+(setq *ejemplo* (make-jugador
+                        :nombre   '|ejemplo|
+                        :f-juego  #'f-j-nmx
+                        :f-eval   #'heuristica))
+
+(partida 0 2 (list *ejemplo* *jdr-nmx-bueno*))
