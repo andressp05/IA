@@ -244,14 +244,14 @@
 ;;; Mejor Jugador 1704
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar *alias* '|AitanaWar|) ; alias que aparecerá en el ranking
+(defvar *alias* '|Aiteda|) ; alias que aparecerá en el ranking
 
 (defun heuristica1704 (estado)
   (+ (our-pesc-map (list-lado estado (estado-lado-sgte-jugador estado))
-                   '(0 1 2 3 4 5))
+                   '(0 1 2 4 8 16))
      (our-pesc-map (list-lado estado (lado-contrario (estado-lado-sgte-jugador estado)))
-                '(5 4 3 2 1 0))))
-
+                   '(16 8 4 2 1 0))))
+  
 (defun our-pesc-map (lista1 lista2)
   (reduce '+ (mapcar #'* lista1 lista2)))
 
@@ -265,8 +265,6 @@
                         :f-juego  #'f-j-nmx
                         :f-eval   #'heuristica1704))
 
-(partida 1 2 (list *1704* *jdr-nmx-bueno*))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Jugador Pruebas
 ;;; SE IRA CAMBIANDO
@@ -276,9 +274,9 @@
 
 (defun heuristica (estado)
   (+ (our-pesc-map (list-lado estado (estado-lado-sgte-jugador estado))
-                   '(0 1 2 4 8 16))
+                   '(0 1 4 9 16 25))
      (our-pesc-map (list-lado estado (lado-contrario (estado-lado-sgte-jugador estado)))
-                   '(16 8 4 2 1 0))))
+                   '(25 16 9 4 1 0))))
   
 (defun our-pesc-map (lista1 lista2)
   (reduce '+ (mapcar #'* lista1 lista2)))
@@ -293,4 +291,4 @@
                         :f-juego  #'f-j-nmx
                         :f-eval   #'heuristica))
 
-(partida 0 2 (list *ejemplo* *jdr-nmx-bueno*))
+(partida 1 2 (list *ejemplo* *1704*))
