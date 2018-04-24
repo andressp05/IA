@@ -263,7 +263,57 @@
 (setq *1704* (make-jugador
                         :nombre   '|1704|
                         :f-juego  #'f-j-nmx
-                        :f-eval   #'heuristica1704))
+              :f-eval   #'heuristica1704))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Mejor Jugador 1804
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar *alias* '|AitanaWar|) ; alias que aparecerá en el ranking
+
+(defun heuristica1804 (estado)
+  (+ (our-pesc-map (list-lado estado (estado-lado-sgte-jugador estado))
+                   '(0 1 2 3 4 5))
+     (our-pesc-map (list-lado estado (lado-contrario (estado-lado-sgte-jugador estado)))
+                   '(5 4 3 2 1 0))))
+  
+(defun our-pesc-map (lista1 lista2)
+  (reduce '+ (mapcar #'* lista1 lista2)))
+
+(defvar *1804* (make-jugador
+                        :nombre   '|1804|
+                        :f-juego  #'f-j-nmx
+                        :f-eval   #'heuristica1804))                   
+                   
+(setq *1804* (make-jugador
+                        :nombre   '|1804|
+                        :f-juego  #'f-j-nmx
+              :f-eval   #'heuristica1804))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Mejor Jugador 1904
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar *alias* '|Alfred no sabe hablar espanyol|) ; alias que aparecerá en el ranking
+
+(defun heuristica1904 (estado)
+  (+ (our-pesc-map (list-lado estado (estado-lado-sgte-jugador estado))
+                   '(0 1 4 9 16 25))
+     (our-pesc-map (list-lado estado (lado-contrario (estado-lado-sgte-jugador estado)))
+                   '(25 16 9 4 1 0))))
+  
+(defun our-pesc-map (lista1 lista2)
+  (reduce '+ (mapcar #'* lista1 lista2)))
+
+(defvar *1904* (make-jugador
+                        :nombre   '|1904|
+                        :f-juego  #'f-j-nmx
+                        :f-eval   #'heuristica1904))                   
+                   
+(setq *1904* (make-jugador
+                        :nombre   '|1904|
+                        :f-juego  #'f-j-nmx
+              :f-eval   #'heuristica1904))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Jugador Pruebas
@@ -272,14 +322,17 @@
 
 (defvar *alias* '|ejemplo|) ; alias que aparecerá en el ranking
 
-(defun heuristica (estado)
-  (+ (our-pesc-map (list-lado estado (estado-lado-sgte-jugador estado))
-                   '(0 1 4 9 16 25))
-     (our-pesc-map (list-lado estado (lado-contrario (estado-lado-sgte-jugador estado)))
-                   '(25 16 9 4 1 0))))
-  
-(defun our-pesc-map (lista1 lista2)
-  (reduce '+ (mapcar #'* lista1 lista2)))
+(defun heuristica (estado) 
+    (- (+(get-pts (estado-lado-sgte-jugador estado))
+          (*(get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 6) 4)
+          )
+       (*(get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 5) 2)
+       (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 4)
+       (*(length (posiciones-con-fichas-lado (estado-tablero estado) (lado-contrario (estado-lado-sgte-jugador estado)) 0)) 4)
+       (- (cuenta-fichas (estado-tablero estado) (lado-contrario (estado-lado-sgte-jugador estado)) 0))
+       (+(get-pts (lado-contrario (estado-lado-sgte-jugador estado))) 
+          (get-fichas (estado-tablero estado) (lado-contrario (estado-lado-sgte-jugador estado)) 6))
+       ))
 
 (defvar *ejemplo* (make-jugador
                         :nombre   '|ejemplo|
@@ -291,4 +344,4 @@
                         :f-juego  #'f-j-nmx
                         :f-eval   #'heuristica))
 
-(partida 1 2 (list *ejemplo* *1704*))
+(partida 1 2 (list *1904* *ejemplo*))
