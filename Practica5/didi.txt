@@ -1,0 +1,65 @@
+buscar en google la red neuronal 
+neural playground tensorflow
+puntos del interior de una clase y exterior de otra
+y hemos hecho una descripcion de cada punto
+multiplicamos las señales por pesos, proporcionados al grosos
+Si usa,os x1 y x2 son divisiones verticales y horizontales respectivamente
+Luego hacemos una transformacion no lineal con decisiones basadas en rectas con pendientes distintas 
+Finalmente hace una ultima no lineal y lo divide en -1 naranja y 1 azul con los pesos estimados de manera aleatoria
+Ahora tenemos que poner los pesos segun queramos para predecirlos 
+
+Vamos a hacer un descenso por gradiente, con valores que van al por un proceso de entrenamiento (dandole al play)
+La raya |_ indica el errorr que estamos cometiendo 
+
+error de entrenamiento:
+
+	x1  x2  clase
+ej1 5  -5  naranja
+ej2 1  0.5  azul
+ej3 -1  3  naranja
+...
+No podemos valorar la calidad del productor segun los ejemplos. Para ello vamos a dividir
+el proceso de aprendizaje TRAIN
+para validar el modelo TEST (lo usamos como diagnostico, no existe en la practica)
+(Son independientes)
+
+Podemos añadir un parametro de ruido, lo que queremos que nunca falle es el test no el train, no queremos guardar en una base de datos todo el train 
+Train baja y test sube
+primero aprendemos y luego el error de test, estaba en el minimo y empieza a subir, lo que ocurre es el sobreaprendizaje, que fuerza las conexiones para clasificar puntos que no cumplen el patron 
+Se fija mucho en train y esta sobreaprendiendo y el error del test sube
+
+Para evitarlo, ponemos una red mas sencilla, por ejemplo, ponemos mas capas a la red (determinamos arquitectura de la red) 
+
+Para evitar sobreaprendizaje, paramos cuando el test esta en el minimo con earlystoppping:
+dividimos train en dos partes, 
+1 subconjunto pequeño similar a test llamado validacion 
+otro subconjunto dondo minimizamos el objetivo(indpendiente de los datos que uso que te da una estimacion no sesgadad de los datos)
+
+asi monitorizamos el error de validacion
+Si el sistema de aprendizaje se vuelve inestable, es que esta capturando patrones que no cumplen el objetivo y los patrones son muy flexibles
+En el meno regularizacion podemos añadir penalizaciones a la norma del vector de  pesos y lo incluimos en la funcion objetivo en escala logaritmica con factor 3 entre los valores. La busqueda de arametros es escala logaritmica y asi obtiene mas resistencia, porque penalizamos la no estabilidad de la red. 
+Ahora se usa generalmente (en googl epor ejemplo) redes neuronales profundas muy complejas y penalizamos 
+Otro tipo de penalizacion es L1
+que en vez de sumar los pesos al cuadrado, sumamos los valores absolutos de los pesos, tiene un pico donde la funcion no es diferenciable y los pesos van a 0 de manera exacta y hemos regularizado la red tanto que esta subaprendiendo
+A mayor ruido mayor penalizacion
+Una red neuronal profunda tiene 3 o mas capas mas o menos
+Hay que tener mucha potencia de calculo para poder tener mas capas(Solo hablamos de imagenes)
+si validacion lo usamos para elegir arquetecturas, lo sesfgamos y no podemos usarlompara el test
+
+
+Para intentar no tener validacion sesgada, hacemos validacion cruzada:(3-CV en el train)
+
+Hacemos particion de train
+Dividimos train en n trozos
+uzamos n-m para entrenamineto
+con m Obtenemos error de validacion 
+y asi n veces alternando las particiones
+Finalmente, para obtener el error de validacion cruzada, hacemos la media de todos para estimarlo. Sino usamos el de test.
+
+El sistema final lo entrenamos con los n trozos y ahi evaluamos el test obteniendo el resulltado final de nuestro aprendizaje
+No tenemos la etiqueta d eclase, pero nuestro objetivo es calcularla
+
+
+CONSTRUCCION RED NEURONAL Y EN QUE CONSISTE:
+
+sistema de computacion basado en sistemas biologicos
